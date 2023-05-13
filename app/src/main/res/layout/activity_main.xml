@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/main_textview_title"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Suivi implantation des trous" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent">
+            <TextView
+                android:id="@+id/main_textview_nom_volee"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nom volée" />
+
+            <EditText
+                android:id="@+id/main_edittext_nom_volee"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:hint="Nom de la volée" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent">
+            <TextView
+                android:id="@+id/main_textview_numero_rangee"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Numéro de rangée dans volée" />
+
+            <NumberPicker
+                android:id="@+id/main_edittext_numero_rangee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:hint="Numéro de rangée dans volée" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintStart_toStartOf="parent">
+            <TextView
+                android:id="@+id/main_textview_numero_trou_dans_rangee"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Numéro de trou dans rangée" />
+            <NumberPicker
+                android:id="@+id/main_edittext_numero_trou_dans_rangee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Numéro de trou dans rangée" />
+        </LinearLayout>
+        <Button
+            android:id="@+id/main_button_enregistrer_trou"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="16dp"
+            android:text="Enregistrer le trou" />
+
+    </LinearLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
