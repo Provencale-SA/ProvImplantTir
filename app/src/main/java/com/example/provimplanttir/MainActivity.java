@@ -35,6 +35,13 @@ import android.util.Log; // Pour utiliser Log.d(“test”, “resultat test”)
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 
@@ -59,8 +66,10 @@ public class MainActivity extends AppCompatActivity {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
-
+    public String FILENAME = "storage.json";
     protected boolean gps_enabled;
+
+    public Volees volees;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +87,10 @@ public class MainActivity extends AppCompatActivity {
 
         mLocationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
+
+
+        //////////
+        this.volees = new Volees(this, FILENAME);
     }
 
     @Override
@@ -198,20 +211,25 @@ public class MainActivity extends AppCompatActivity {
                 //Log.v("Position", latitude);
 
 
+
+
+
+                Location location = mLocationManager.getLastKnownLocation("gpsLocationListener");
+                if (location != null) {
+                    Log.v("BUTTONS", "New GPS location: "
+                            + String.format("%9.6f", location.getLatitude()) + ", "
+                            + String.format("%9.6f", location.getLongitude())+ ", "
+                            + String.format("%9.6f", location.getAltitude()) );
+
+                    Log.v("BUTTONS", "New GPS location: "
+                            + location.toString() );
+
+                } else{
+                    Log.v("BUTTONS", "location==null");
+                }
             } else {
                 Log.v("BUTTONS", "checkPermissions=False");
                 alertbox("Gps Status!!", "Your GPS is: OFF");
-            }
-
-
-            Location location = mLocationManager.getLastKnownLocation("gpsLocationListener");
-            if (location != null) {
-                Log.v("BUTTONS", "New GPS location: "
-                        + String.format("%9.6f", location.getLatitude()) + ", "
-                        + String.format("%9.6f", location.getLongitude()));
-
-            } else{
-                Log.v("BUTTONS", "location==null");
             }
 
         }
@@ -358,5 +376,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
+
 }
+
 
