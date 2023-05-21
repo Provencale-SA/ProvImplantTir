@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 import android.Manifest;
 
+import android.location.Criteria;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Build;
@@ -20,6 +21,7 @@ import android.location.LocationManager;
 import android.location.LocationListener;
 import android.location.Location;
 import android.location.LocationProvider;
+import android.os.Looper;
 import android.provider.Settings;
 
 import android.app.AlertDialog;
@@ -60,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LocationManager mLocationManager;
     //private LocationListener mLocationListener;
-    protected Context context;
+    final Looper looper = null;
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
@@ -82,15 +84,16 @@ public class MainActivity extends AppCompatActivity {
 
         mEnregistrerTrouButton = findViewById(R.id.main_button_enregistrer_trou);
 
+
+        mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+
         //mEnregistrerTrouButton.setEnabled(false);
         mEnregistrerTrouButton.setOnClickListener(mEnrgPosiButtonListener);
 
-        mLocationManager = (LocationManager)
-                getSystemService(Context.LOCATION_SERVICE);
-
-
         //////////
         this.volees = new Volees(this, FILENAME);
+        Log.d("MainActivity","onCreate:volees"+this.volees.toString());
     }
 
     @Override
@@ -119,8 +122,6 @@ public class MainActivity extends AppCompatActivity {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                3000, 0, gpsLocationListener);
 
         // Workaround for Nokia Devices, Android 9
         // https://github.com/BasicAirData/GPSLogger/issues/77
@@ -152,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mLocationManager.removeUpdates(gpsLocationListener);
     }
 
 
@@ -196,46 +196,22 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.v("BUTTONS", "checkPermissions=True");
 
-                //editLocation.setText("Please!! move your device to"+
-                //        " see the changes in coordinates."+"\nWait..");
+                ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
+                // Now first make a criteria with your requirements
+                // this is done to save the battery life of the device
+                // there are various other other criteria you can search for..
+                Criteria criteria = new Criteria();
+                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                criteria.setPowerRequirement(Criteria.POWER_LOW);
+                criteria.setAltitudeRequired(false);
+                criteria.setBearingRequired(false);
+                criteria.setSpeedRequired(false);
+                criteria.setCostAllowed(true);
+                criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+                criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
 
-                //pb.setVisibility(View.VISIBLE);
-                //locationListener = new MyLocationListener();
+                mLocationManager.requestSingleUpdate(criteria, gpsLocationListener, looper);
 
-                //locationMangaer.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                //       5000, 10,locationListener);
-
-                //String longitude = "Longitude: " +loc.getLongitude();
-                //Log.v("Position", longitude);
-                //String latitude = "Latitude: " +loc.getLatitude();
-                //Log.v("Position", latitude);
-
-
-
-
-
-                Location location = mLocationManager.getLastKnownLocation("gpsLocationListener");
-                if (location != null) {
-                    Log.v("BUTTONS", "New GPS location: "
-                            + String.format("%9.6f", location.getLatitude()) + ", "
-                            + String.format("%9.6f", location.getLongitude())+ ", "
-                            + String.format("%9.6f", location.getAltitude()) );
-
-                    Log.v("BUTTONS", "New GPS location: "
-                            + location.toString() );
-
-                    String nomVolee = mNomVoleeEditText.getText().toString();
-
-                    int numeroRangee = mNumeroRangeeNumberPicker.getValue();
-                    int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
-                    volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                            location.getLatitude(),location.getLatitude(),location.getAltitude());
-
-                    mNumeroTrouDansRangeeNumberPicker.setValue(numeroTrou+1);
-
-                } else{
-                    Log.v("BUTTONS", "location==null");
-                }
             } else {
                 Log.v("BUTTONS", "checkPermissions=False");
                 alertbox("Gps Status!!", "Your GPS is: OFF");
@@ -351,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-
+            Log.d("LocationListener", "onStatusChanged:"+String.valueOf(status));
             switch (status) {
                 case LocationProvider.AVAILABLE:
                     Log.v("LocationListener", "GPS available again");
@@ -377,10 +353,30 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLocationChanged(Location location) {
-            //locationManager.removeUpdates(gpsLocationListener);
-            Log.v("LocationListener", "New GPS location: "
-                    + String.format("%9.6f", location.getLatitude()) + ", "
-                    + String.format("%9.6f", location.getLongitude()));
+            // This call should be triggered by requestSingleUpdate on button press
+
+            if (location != null) {
+//                Log.v("onLocationChanged", "New GPS location: "
+//                        + String.format("%9.6f", location.getLatitude()) + ", "
+//                        + String.format("%9.6f", location.getLongitude())+ ", "
+//                        + String.format("%9.6f", location.getAltitude()) );
+
+                Log.v("onLocationChanged", "New GPS location: "
+                        + location.toString() );
+
+                String nomVolee = mNomVoleeEditText.getText().toString();
+
+                int numeroRangee = mNumeroRangeeNumberPicker.getValue();
+                int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                        location.getLatitude(),location.getLatitude(),location.getAltitude());
+                volees.write(getApplicationContext(), FILENAME);
+
+                mNumeroTrouDansRangeeNumberPicker.setValue(numeroTrou+1);
+
+            } else{
+                Log.v("onLocationChanged", "location==null");
+            }
         }
     };
 
