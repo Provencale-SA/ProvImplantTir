@@ -224,6 +224,15 @@ public class MainActivity extends AppCompatActivity {
                     Log.v("BUTTONS", "New GPS location: "
                             + location.toString() );
 
+                    String nomVolee = mNomVoleeEditText.getText().toString();
+
+                    int numeroRangee = mNumeroRangeeNumberPicker.getValue();
+                    int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                    volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                            location.getLatitude(),location.getLatitude(),location.getAltitude());
+
+                    mNumeroTrouDansRangeeNumberPicker.setValue(numeroTrou+1);
+
                 } else{
                     Log.v("BUTTONS", "location==null");
                 }
