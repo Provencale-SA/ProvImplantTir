@@ -34,9 +34,6 @@ import android.widget.Toast;
 
 import android.util.Log; // Pour utiliser Log.d(“test”, “resultat test”);
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,8 +46,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private EditText mNomVoleeEditText;
-    private NumberPicker mNumeroRangeeNumberPicker;
-    private NumberPicker mNumeroTrouDansRangeeNumberPicker;
+    private HorizontalNumberPicker mNumeroRangeeNumberPicker;
+    private HorizontalNumberPicker mNumeroTrouDansRangeeNumberPicker;
     private Button mEnregistrerTrouButton;
 
 
@@ -100,10 +97,6 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         Log.d("myApp", "[#] " + this + " - onStart()");
         super.onStart();
-
-        if (!EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().register(this);
-        }
     }
 
     @Override
@@ -122,32 +115,12 @@ public class MainActivity extends AppCompatActivity {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
-        // Workaround for Nokia Devices, Android 9
-        // https://github.com/BasicAirData/GPSLogger/issues/77
-        //if (EventBus.getDefault().isRegistered(this)) {
-        //    //Log.w("myApp", "[#] GPSActivity.java - EventBus: GPSActivity already registered");
-        //    EventBus.getDefault().unregister(this);
-        //}
-
-        //EventBus.getDefault().register(this);
-
-        //EventBus.getDefault().post(EventBusMSG.APP_RESUME);
-
-        // Check for Location runtime Permissions (for Android 23+)
-        //if (!gpsApp.isLocationPermissionChecked()) {
-        //    checkLocationPermission();
-        //    gpsApp.setLocationPermissionChecked(true);
-        //}
     }
 
     @Override
     public void onStop() {
         Log.d("myApp", "[#] " + this + " - onStop()");
         super.onStop();
-        EventBus.getDefault().unregister(this);
-
-
     }
 
     @Override
@@ -157,22 +130,9 @@ public class MainActivity extends AppCompatActivity {
 
 
 // https://github.com/BasicAirData/GPSLogger/tree/master/app/src/main/java/eu/basicairdata/graziano/gpslogger
-//https://stackoverflow.com/questions/40191554/android-greenrobot-eventbus-in-android
 
 // voir https://github.com/JaimePerezS/GPSLocation/blob/master/app/src/main/java/com/example/jaime/gpslocation/MainActivity.java
 // GPS logger
-
-    public static class MessageEvent { /* Additional fields if needed */
-    }
-
-    @Subscribe
-    public void onEvent(MessageEvent event) {
-        //switch (msg.eventBusMSG) {
-        //    case EventBusMSG.TRACKLIST_SELECT:
-        //    case EventBusMSG.TRACKLIST_DESELECT:
-        //        activateActionModeIfNeeded();
-        //}
-    }
 
 
     // Create an anonymous implementation of OnClickListener
@@ -372,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
                         location.getLatitude(),location.getLatitude(),location.getAltitude());
                 volees.write(getApplicationContext(), FILENAME);
 
-                mNumeroTrouDansRangeeNumberPicker.setValue(numeroTrou+1);
+                mNumeroTrouDansRangeeNumberPicker.add_one();
 
             } else{
                 Log.v("onLocationChanged", "location==null");
