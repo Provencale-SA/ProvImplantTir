@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -18,20 +19,20 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-
 public class Volees {
+    public String FILENAME = "storage.json";
     private SortedSet<Trou> setTrous =  new TreeSet<Trou>() ;
 
     //Creator
-    public Volees(Context context, String fileName){
+    public Volees(Context context){
         Log.d("Volees","Creator Volees");
-        boolean isFilePresent = this.isFilePresent(context, fileName);
+        boolean isFilePresent = this.isFilePresent(context);
         if(isFilePresent) {
             Log.d("Volees","File found");
-            this.read(context, fileName);
+            this.read(context);
             //do the json parsing here and do the rest of functionality of app
         } else {
-            boolean isFileCreated = this.create(context, fileName);
+            boolean isFileCreated = this.create(context);
             Log.d("Volees","File created");
             if(isFileCreated) {
                 Log.d("Volees","File successfully created");
@@ -51,9 +52,9 @@ public class Volees {
 
     }
 
-
-
-
+    public ArrayList<Trou> toArrayList() {
+        return new ArrayList(this.setTrous);
+    };
 
     public String toString() {
         Log.d("Volees","toString");
@@ -99,14 +100,14 @@ public class Volees {
     ////////////
     /// https://stackoverflow.com/questions/40168601/android-how-to-save-json-data-in-a-file-and-retrieve-it
 
-    public void read(Context context, String fileName) {
+    public void read(Context context) {
         Log.d("Volees","read");
-        this.fromString(readFile(context, fileName));
+        this.fromString(readFile(context));
     }
-    private String readFile(Context context, String fileName) {
+    private String readFile(Context context) {
         Log.d("Volees","readFile");
         try {
-            FileInputStream fis = context.openFileInput(fileName);
+            FileInputStream fis = context.openFileInput(this.FILENAME);
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader bufferedReader = new BufferedReader(isr);
             StringBuilder sb = new StringBuilder();
@@ -124,16 +125,16 @@ public class Volees {
         }
     }
 
-    public boolean write(Context context, String fileName) {
+    public boolean write(Context context) {
         Log.d("Volees","write");
         String jsonString = this.toString();
-        return this.writeFile(context, fileName, jsonString);
+        return this.writeFile(context, jsonString);
     }
     //chekc json  https://stackoverflow.com/questions/62474129/create-write-edit-json-file-in-android-studio
-    private boolean writeFile(Context context, String fileName, String jsonString) {
+    private boolean writeFile(Context context, String jsonString) {
         Log.d("Volees","writeFile");
         try {
-            FileOutputStream fos = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+            FileOutputStream fos = context.openFileOutput(this.FILENAME, Context.MODE_PRIVATE);
             if (jsonString != null) {
                 fos.write(jsonString.getBytes());
             }
@@ -149,14 +150,14 @@ public class Volees {
     }
 
 
-    public boolean create(Context context, String fileName) {
+    public boolean create(Context context) {
         Log.d("Volees","Create");
-        return writeFile(context, fileName, "");
+        return writeFile(context, "");
     }
 
-    public boolean isFilePresent(Context context, String fileName) {
+    public boolean isFilePresent(Context context) {
         Log.d("Volees","isFilePresent");
-        String path = context.getFilesDir().getAbsolutePath() + "/" + fileName;
+        String path = context.getFilesDir().getAbsolutePath() + "/" + this.FILENAME;
         File file = new File(path);
         return file.exists();
     }

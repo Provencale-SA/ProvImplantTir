@@ -45,6 +45,7 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
+    private Button buttonSwitchManageTrouActivity;
     private EditText mNomVoleeEditText;
     private HorizontalNumberPicker mNumeroRangeeNumberPicker;
     private HorizontalNumberPicker mNumeroTrouDansRangeeNumberPicker;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
-    public String FILENAME = "storage.json";
+
     protected boolean gps_enabled;
 
     public Volees volees;
@@ -74,6 +75,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        buttonSwitchManageTrouActivity = findViewById(R.id.main_button_suppr_trous);
+        buttonSwitchManageTrouActivity.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              switchToManageTrousActivity();
+          }
+        });
 
         mNomVoleeEditText = findViewById(R.id.main_edittext_nom_volee);
         mNumeroRangeeNumberPicker = findViewById(R.id.main_edittext_numero_rangee);
@@ -89,10 +98,14 @@ public class MainActivity extends AppCompatActivity {
         mEnregistrerTrouButton.setOnClickListener(mEnrgPosiButtonListener);
 
         //////////
-        this.volees = new Volees(this, FILENAME);
+        this.volees = new Volees(this);
         Log.d("MainActivity","onCreate:volees"+this.volees.toString());
     }
 
+    private void switchToManageTrousActivity() {
+        Intent switchActivityIntent = new Intent(this, ManageTrous.class);
+        startActivity(switchActivityIntent);
+    }
     @Override
     public void onStart() {
         Log.d("myApp", "[#] " + this + " - onStart()");
@@ -330,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
                 int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
                 volees.addtrou(nomVolee, numeroRangee, numeroTrou,
                         location.getLatitude(),location.getLatitude(),location.getAltitude());
-                volees.write(getApplicationContext(), FILENAME);
+                volees.write(getApplicationContext());
 
                 mNumeroTrouDansRangeeNumberPicker.add_one();
 
