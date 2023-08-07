@@ -26,6 +26,8 @@ import android.provider.Settings;
 
 import android.app.AlertDialog;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -93,8 +95,29 @@ public class MainActivity extends AppCompatActivity {
 
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
+        // mEnregistrerTrouButton should be disabled if Nom de la Volee is empty
+        mNomVoleeEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(s.toString().trim().length()==0){
+                    mEnregistrerTrouButton.setEnabled(false);
+                } else {
+                    mEnregistrerTrouButton.setEnabled(true);
+                }
+            }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+                // TODO Auto-generated method stub
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
+                // TODO Auto-generated method stub
+            }
+        });
 
-        //mEnregistrerTrouButton.setEnabled(false);
+
+        mEnregistrerTrouButton.setEnabled(false); // start with the button disabled
         mEnregistrerTrouButton.setOnClickListener(mEnrgPosiButtonListener);
 
         //////////
@@ -338,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("onLocationChanged", "New GPS location: "
                         + location.toString() );
 
-                String nomVolee = mNomVoleeEditText.getText().toString();
+                String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
 
                 int numeroRangee = mNumeroRangeeNumberPicker.getValue();
                 int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
