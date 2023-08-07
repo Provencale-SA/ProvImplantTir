@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ public class ManageTrous extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("ManageTrous","onCreate:start");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.manage_trous);
 
@@ -34,6 +36,7 @@ public class ManageTrous extends AppCompatActivity {
         });
 
         this.volees = new Volees(this);
+        Log.d("ManageTrous","onCreate:volees"+this.volees.toString());
 
         // Create the adapter to convert the array to views
         TrousAdapter adapter = new TrousAdapter(this, this.volees);
@@ -41,7 +44,7 @@ public class ManageTrous extends AppCompatActivity {
         // Attach the adapter to a ListView
         listTrous = (ListView)findViewById(R.id.listTrous);
         listTrous.setAdapter(adapter);
-
+        Log.d("ManageTrous","onCreate:end:volees"+this.volees.toString());
     }
 
     public class TrousAdapter extends ArrayAdapter<Trou> {

@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchToManageTrousActivity() {
+        Log.d("MainActivity", "switchToManageTrousActivity");
         Intent switchActivityIntent = new Intent(this, ManageTrous.class);
         startActivity(switchActivityIntent);
     }
@@ -341,8 +342,10 @@ public class MainActivity extends AppCompatActivity {
 
                 int numeroRangee = mNumeroRangeeNumberPicker.getValue();
                 int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                Log.v("onLocationChanged","Avant : "+volees.toString());
                 volees.addtrou(nomVolee, numeroRangee, numeroTrou,
                         location.getLatitude(),location.getLatitude(),location.getAltitude());
+                Log.v("onLocationChanged","Apres : "+volees.toString());
                 volees.write(getApplicationContext());
 
                 mNumeroTrouDansRangeeNumberPicker.add_one();

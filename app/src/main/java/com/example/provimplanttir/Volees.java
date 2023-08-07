@@ -82,9 +82,10 @@ public class Volees {
         try {
             JSONObject jsnobject = new JSONObject(jsonString);
             JSONArray jsonArray = jsnobject.getJSONArray("volees");
+            Log.d("Volees","fromString:length"+String.valueOf(jsonArray.length()));
 
+            setTrous.clear();
             for (int i = 0; i < jsonArray.length(); i++) {
-                setTrous.clear();
                 Trou trou = new Trou(jsonArray.getJSONObject(i));
                 setTrous.add(trou);
             }
@@ -115,6 +116,7 @@ public class Volees {
             while ((line = bufferedReader.readLine()) != null) {
                 sb.append(line);
             }
+            Log.d("Volees","readFile:Trous:"+sb.toString());
             return sb.toString();
         } catch (FileNotFoundException fileNotFound) {
             Log.d("Volees","readFile:fileNotFound");
