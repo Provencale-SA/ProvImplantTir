@@ -65,10 +65,13 @@ public class ManageTrous extends AppCompatActivity {
             TextView tvNomVolee = (TextView) convertView.findViewById(R.id.tvNomVolee);
             TextView tvNumeroRangee = (TextView) convertView.findViewById(R.id.tvNumeroRangee);
             TextView tvNumeroTrou = (TextView) convertView.findViewById(R.id.tvNumeroTrou);
+            Button btDelete = (Button)convertView.findViewById(R.id.btDelete);
+
             // Populate the data into the template view using the data object
             tvNomVolee.setText(trou.nomVolee);
             tvNumeroRangee.setText(String.valueOf(trou.numeroRangee));
             tvNumeroTrou.setText(String.valueOf(trou.numeroTrou));
+            
             // Return the completed view to render on screen
             return convertView;
         }

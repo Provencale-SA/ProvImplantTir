@@ -1,23 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="50dp"
+    android:orientation="horizontal" >
     <TextView
         android:id="@+id/tvNomVolee"
-        android:layout_width="wrap_content"
+        android:layout_weight="40"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
         android:text="Nom volee" />
 
     <TextView
         android:id="@+id/tvNumeroRangee"
-        android:layout_width="wrap_content"
+        android:layout_weight="20"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
-        android:text="Numero rangee" />
+        android:text="Numero rangee"
+        android:gravity="right" />
 
     <TextView
         android:id="@+id/tvNumeroTrou"
-        android:layout_width="wrap_content"
+        android:layout_weight="20"
+        android:layout_width="30dp"
         android:layout_height="wrap_content"
-        android:text="Numero trou" />
+        android:text="Numero trou"
+        android:gravity="right"/>
+
+    <Button
+        android:id="@+id/btDelete"
+        android:layout_weight="19"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:src="@android:drawable/ic_delete"
+        android:contentDescription="Delete icon" />
 
 </LinearLayout>
