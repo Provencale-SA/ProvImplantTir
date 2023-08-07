@@ -52,6 +52,12 @@ public class Volees {
 
     }
 
+    public boolean removeTrou(Trou trou){
+        Log.d("Volees","removeTrou");
+        return setTrous.remove(trou);
+    }
+
+
     public ArrayList<Trou> toArrayList() {
         return new ArrayList(this.setTrous);
     };
