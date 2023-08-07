@@ -101,13 +101,13 @@ public class ManageTrous extends AppCompatActivity {
             btDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    // Let s add a confirmation dialog (else call directly deleteItem(position);)
                     AlertDialog.Builder builder = new AlertDialog.Builder(ManageTrous.this);
                     builder.setMessage("Etes-vous sûr ?");
                     builder.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.dismiss();
                             deleteItem(position);    // delete
-
                         }
                     });
                     builder.setNegativeButton("Non", new DialogInterface.OnClickListener() {
@@ -117,14 +117,8 @@ public class ManageTrous extends AppCompatActivity {
                     });
                     AlertDialog alert = builder.create();
                     alert.show();
-
-
-
-
                 }
             });
-
-
             // Return the completed view to render on screen
             return convertView;
         }
