@@ -73,7 +73,7 @@
                 android:layout_height="wrap_content"
                 android:text="Numéro de rangée dans volée" />
 
-            <com.example.provimplanttir.HorizontalNumberPicker
+            <com.provencale.provimplanttir.HorizontalNumberPicker
                 android:id="@+id/main_edittext_numero_rangee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -94,7 +94,7 @@
                 android:layout_height="wrap_content"
                 android:text="Numéro de trou dans rangée" />
 
-            <com.example.provimplanttir.HorizontalNumberPicker
+            <com.provencale.provimplanttir.HorizontalNumberPicker
                 android:id="@+id/main_edittext_numero_trou_dans_rangee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -1,4 +1,4 @@
-package com.example.provimplanttir;
+package com.provencale.provimplanttir;
 
 import androidx.appcompat.app.AppCompatActivity;
 

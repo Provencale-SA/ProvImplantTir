@@ -1,4 +1,4 @@
-package com.example.provimplanttir;
+package com.provencale.provimplanttir;
 
 // heavily inspired by stilkin answer in https://stackoverflow.com/a/56061379/11405279
 
