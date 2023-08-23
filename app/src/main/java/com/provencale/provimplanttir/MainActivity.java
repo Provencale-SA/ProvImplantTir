@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
     // this is done to save the battery life of the device
     // there are various other other criteria you can search for..
     public Criteria gps_criteria = new Criteria();
-    public final static float GPS_PRECISION_HORIZONTAL = 10.0F;// meters ; cannot save position unless it is within range
-    public final static float GPS_PRECISION_VERTICAL = 12.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; cannot save position unless it is within range
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -405,16 +405,32 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("onLocationChanged", "New GPS location: "
                         + location.toString() );
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    is_accurate_enough = location.hasAccuracy()
-                                        && location.getAccuracy() < GPS_PRECISION_HORIZONTAL
-                                        && location.hasVerticalAccuracy()
-                                        && location.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL;
+                is_accurate_enough = true;
+                if (!location.hasAccuracy()){
+                    is_accurate_enough = false;
+                    Toast.makeText(getApplicationContext(), "Manque précision horizontale", Toast.LENGTH_LONG).show();
                 }
                 else{
-                    is_accurate_enough = location.hasAccuracy()
-                            && location.getAccuracy() < GPS_PRECISION_HORIZONTAL;
+                    if (GPS_PRECISION_HORIZONTAL < location.getAccuracy()){
+                        is_accurate_enough = false;
+                        Toast.makeText(getApplicationContext(), "Précision horizontale ("+String.format("%.1f",location.getAccuracy())+"m) insuffisante.", Toast.LENGTH_LONG).show();
+                    }
+                    else{
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (!location.hasVerticalAccuracy()){
+                                is_accurate_enough = false;
+                                Toast.makeText(getApplicationContext(), "Manque précision verticale", Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                if (GPS_PRECISION_VERTICAL < location.getVerticalAccuracyMeters()) {
+                                    is_accurate_enough = false;
+                                    Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", location.getVerticalAccuracyMeters()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        }
+                    }
                 }
+
                 if(!verify_gps_accuracy | is_accurate_enough) { //  ok if location is precise enough (or if we bypass this security)
                     String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
 
