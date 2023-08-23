@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager mLocationManager;
     //private LocationListener mLocationListener;
     final Looper looper = null;
+    public int gps_loop_for_accuracy;
+    private static int MAX_GPS_LOOP = 30;
+    public boolean verify_gps_accuracy; // used to check or bypass a security on gps accuracy
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
@@ -63,10 +66,33 @@ public class MainActivity extends AppCompatActivity {
 
     public Volees volees;
 
+
+    ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
+    // Now first make a criteria with your requirements
+    // this is done to save the battery life of the device
+    // there are various other other criteria you can search for..
+    public Criteria gps_criteria = new Criteria();
+    public final static float GPS_PRECISION_HORIZONTAL = 5.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_VERTICAL = 7.0F;// meters ; cannot save position unless it is within range
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Setting GPS criteria
+        gps_criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        gps_criteria.setPowerRequirement(Criteria.POWER_HIGH); // Power high should improve accuracy
+        gps_criteria.setAltitudeRequired(true);
+        gps_criteria.setBearingRequired(false);
+        gps_criteria.setSpeedRequired(false);
+        gps_criteria.setCostAllowed(true);
+        gps_criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+        gps_criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+        //ACCURACY_HIGH less than 100 meters : not enough
+        //ACCURACY_MEDIUM between 100 - 500 meters
+        //ACCURACY_LOW greater than 500 meters
+
 
         buttonSwitchManageTrouActivity = findViewById(R.id.main_button_suppr_trous);
         buttonSwitchManageTrouActivity.setOnClickListener(new View.OnClickListener() {
@@ -113,6 +139,9 @@ public class MainActivity extends AppCompatActivity {
         //////////
         this.volees = new Volees(this);
         Log.d("MainActivity","onCreate:volees"+this.volees.toString());
+
+        gps_loop_for_accuracy = 0;
+        verify_gps_accuracy = true;
     }
 
     private void switchToManageTrousActivity() {
@@ -169,16 +198,6 @@ public class MainActivity extends AppCompatActivity {
             v.setEnabled(false);
             Log.d("BUTTONS", "User tapped Enregistrer trou");
 
-            int DELAY_DISABLE_BUTTON_MS = 3000; // in ms
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // This method will be executed once the timer is over
-                    v.setEnabled(true); // reanable the button
-                    Log.d("BUTTONS", "Reactivation boutton \"BUTTONS\"");
-                }
-            }, DELAY_DISABLE_BUTTON_MS);// Reactivate after 3000 ms
-
             Boolean flag = checkPermissions();
             if (!flag){
                 Log.v("BUTTONS", "checkPermissions=False");
@@ -189,28 +208,13 @@ public class MainActivity extends AppCompatActivity {
             Boolean gpsFlag = checkGPSWorking();
             if (!gpsFlag){
                 Log.v("BUTTONS", "checkGPSWorking=False");
-                alertbox("Gps Status!!", "Your GPS is: OFF");
+                alertboxGPSDisabled();
                 return;
             }
 
 
             Log.v("BUTTONS", "checkPermissions=True");
-
-            ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
-            // Now first make a criteria with your requirements
-            // this is done to save the battery life of the device
-            // there are various other other criteria you can search for..
-            Criteria criteria = new Criteria();
-            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-            criteria.setPowerRequirement(Criteria.POWER_LOW);
-            criteria.setAltitudeRequired(false);
-            criteria.setBearingRequired(false);
-            criteria.setSpeedRequired(false);
-            criteria.setCostAllowed(true);
-            criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-            criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
-
-            mLocationManager.requestSingleUpdate(criteria, gpsLocationListener, looper);
+            mLocationManager.requestSingleUpdate(gps_criteria, gpsLocationListener, looper);
 
         }
     };
@@ -241,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            return true;
+            return gps_enabled;
         } catch (Exception ex) {
             return false;
         }
@@ -260,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     /*----------Method to create an AlertBox ------------- */
-    protected void alertbox(String title, String mymessage) {
+    protected void alertboxGPSDisabled() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Le GPS du téléphone est désactivé")
                 .setCancelable(false)
@@ -277,6 +281,31 @@ public class MainActivity extends AppCompatActivity {
                             }
                         })
                 .setNegativeButton("Annuler",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // cancel the dialog box
+                                dialog.cancel();
+                            }
+                        });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+    protected void alertboxPrecision() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("il semble qu'il y ait un problème avec la précision. Le point n'a pas été enregistré. Souhaitez vous continuer en désactivant cette sécurité ?")
+                .setCancelable(false)
+                .setTitle("Precision du GPS est insuffisante.")
+                .setPositiveButton("Désactiver sécurité",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // finish the current activity
+                                // AlertBoxAdvance.this.finish();
+                                verify_gps_accuracy = false;
+
+                                dialog.cancel();
+                            }
+                        })
+                .setNegativeButton("Continuer sans rien changer",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // cancel the dialog box
@@ -362,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLocationChanged(Location location) {
+            boolean is_accurate_enough;
             // This call should be triggered by requestSingleUpdate on button press
 
             if (location != null) {
@@ -373,17 +403,48 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("onLocationChanged", "New GPS location: "
                         + location.toString() );
 
-                String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    is_accurate_enough = location.hasAccuracy()
+                                        && location.getAccuracy() < GPS_PRECISION_HORIZONTAL
+                                        && location.hasVerticalAccuracy()
+                                        && location.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL;
+                }
+                else{
+                    is_accurate_enough = location.hasAccuracy()
+                            && location.getAccuracy() < GPS_PRECISION_HORIZONTAL;
+                }
+                if(!verify_gps_accuracy | is_accurate_enough) { //  ok if location is precise enough (or if we bypass this security)
+                    String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
 
-                int numeroRangee = mNumeroRangeeNumberPicker.getValue();
-                int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
-                Log.v("onLocationChanged","Avant : "+volees.toString());
-                volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                        location.getLatitude(),location.getLatitude(),location.getAltitude());
-                Log.v("onLocationChanged","Apres : "+volees.toString());
-                volees.write(getApplicationContext());
+                    int numeroRangee = mNumeroRangeeNumberPicker.getValue();
+                    int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                    Log.v("onLocationChanged", "Avant : " + volees.toString());
+                    volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                            location.getLatitude(), location.getLatitude(), location.getAltitude());
+                    Log.v("onLocationChanged", "Apres : " + volees.toString());
+                    volees.write(getApplicationContext());
 
-                mNumeroTrouDansRangeeNumberPicker.add_one();
+                    mNumeroTrouDansRangeeNumberPicker.add_one();
+
+                    // now reallow the button
+                    mEnregistrerTrouButton.setEnabled(true);
+                    gps_loop_for_accuracy = 0;
+
+                }
+                else{
+                    Log.v("onLocationChanged", "insufficient accuracy:"+String.valueOf(location.getAccuracy()));
+                    // let s try again -> This can create an infinite loop draining power
+                    if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
+                        mLocationManager.requestSingleUpdate(gps_criteria, gpsLocationListener, looper);
+                        gps_loop_for_accuracy += 1;
+                    }
+                    else{
+                        mEnregistrerTrouButton.setEnabled(true);
+                        alertboxPrecision();
+                    }
+
+
+                }
 
             } else{
                 Log.v("onLocationChanged", "location==null");
