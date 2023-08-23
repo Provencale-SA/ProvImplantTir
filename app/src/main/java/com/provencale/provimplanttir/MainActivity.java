@@ -35,6 +35,9 @@ import android.widget.Toast;
 
 import android.util.Log; // Pour utiliser Log.d(“test”, “resultat test”);
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION ;
 
 public class MainActivity extends AppCompatActivity {
     private Button buttonSwitchManageTrouActivity;
@@ -44,12 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mEnregistrerTrouButton;
 
 
-    private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
-    private static final String[] RUNTIME_PERMISSIONS = {
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            //Manifest.permission.WRITE_EXTERNAL_STORAGE,
-    };
-
+    private final static int REQUEST_CODE_PERM_GPS_RW = 1000;
     private LocationManager mLocationManager;
     //private LocationListener mLocationListener;
     final Looper looper = null;
@@ -180,55 +178,70 @@ public class MainActivity extends AppCompatActivity {
             }, DELAY_DISABLE_BUTTON_MS);// Reactivate after 3000 ms
 
             Boolean flag = checkPermissions();
-            if (flag) {
-
-                Log.v("BUTTONS", "checkPermissions=True");
-
-                ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
-                // Now first make a criteria with your requirements
-                // this is done to save the battery life of the device
-                // there are various other other criteria you can search for..
-                Criteria criteria = new Criteria();
-                criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                criteria.setPowerRequirement(Criteria.POWER_LOW);
-                criteria.setAltitudeRequired(false);
-                criteria.setBearingRequired(false);
-                criteria.setSpeedRequired(false);
-                criteria.setCostAllowed(true);
-                criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-                criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
-
-                mLocationManager.requestSingleUpdate(criteria, gpsLocationListener, looper);
-
-            } else {
+            if (!flag){
                 Log.v("BUTTONS", "checkPermissions=False");
-                alertbox("Gps Status!!", "Your GPS is: OFF");
+                requestPermission();
+                return;
             }
+
+            Boolean gpsFlag = checkGPSWorking();
+            if (!gpsFlag){
+                Log.v("BUTTONS", "checkGPSWorking=False");
+                alertbox("Gps Status!!", "Your GPS is: OFF");
+                return;
+            }
+
+
+            Log.v("BUTTONS", "checkPermissions=True");
+
+            ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
+            // Now first make a criteria with your requirements
+            // this is done to save the battery life of the device
+            // there are various other other criteria you can search for..
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setPowerRequirement(Criteria.POWER_LOW);
+            criteria.setAltitudeRequired(false);
+            criteria.setBearingRequired(false);
+            criteria.setSpeedRequired(false);
+            criteria.setCostAllowed(true);
+            criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+            criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+
+            mLocationManager.requestSingleUpdate(criteria, gpsLocationListener, looper);
 
         }
     };
 
     // Function to check GPS is enabled
     private Boolean checkPermissions() {
-
-        if (hasPermissions(this, RUNTIME_PERMISSIONS)) {
-            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            try {
-                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                return true;
-            } catch (Exception ex) {
-            }
-
-
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    RUNTIME_PERMISSIONS, REQUEST_CODE_ASK_PERMISSIONS);
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // Only when the app's target SDK is 23 or higher
+            return true;
         }
+        int gpsPermission = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION);
+        int readStoragePermission = ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE);
+        int writeStoragePermission = ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE);
 
-        return false;
-
-
+        return gpsPermission == PackageManager.PERMISSION_GRANTED &&
+                readStoragePermission == PackageManager.PERMISSION_GRANTED &&
+                writeStoragePermission == PackageManager.PERMISSION_GRANTED;
     }
+
+    private Boolean checkGPSWorking() {
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{ACCESS_FINE_LOCATION, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, this.REQUEST_CODE_PERM_GPS_RW);
+    }
+
+
+
 
     /*----------Method to create an AlertBox ------------- */
     protected void alertbox(String title, String mymessage) {
@@ -258,55 +271,33 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    /**
-     * Only when the app's target SDK is 23 or higher, it requests each dangerous permissions it
-     * needs when the app is running.
-     */
-    private static boolean hasPermissions(Context context, String... permissions) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
-            for (String permission : permissions) {
-                if (ActivityCompat.checkSelfPermission(context, permission)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.v("onRequestPermissionsResult", "called");
         switch (requestCode) {
-            case REQUEST_CODE_ASK_PERMISSIONS: {
-                for (int index = 0; index < permissions.length; index++) {
-                    if (grantResults[index] != PackageManager.PERMISSION_GRANTED &&
-                            !(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                                    permissions[index].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                    ) {
 
-                        /*
-                         * If the user turned down the permission request in the past and chose the
-                         * Don't ask again option in the permission request system dialog.
-                         */
-                        if (!ActivityCompat
-                                .shouldShowRequestPermissionRationale(this, permissions[index])) {
-                            Toast.makeText(this, "Required permission " + permissions[index]
-                                            + " not granted. "
-                                            + "Please go to settings and turn on for sample app",
-                                    Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(this, "Required permission " + permissions[index]
-                                    + " not granted", Toast.LENGTH_LONG).show();
-                        }
+            case REQUEST_CODE_PERM_GPS_RW:
+                if (grantResults.length > 0) {
+                    Log.v("onRequestPermissionsResult", "grantResults.length>0");
+                    boolean gps = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    boolean readStorage = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                    boolean writeStorage = grantResults[2] == PackageManager.PERMISSION_GRANTED;
+
+                    if (!gps){
+                        Toast.makeText(this, "Manque autorisation GPS", Toast.LENGTH_LONG).show();
                     }
-                }
+                    if (!readStorage){
+                        Toast.makeText(this, "Manque autorisation lecture", Toast.LENGTH_LONG).show();
+                    }
+                    if (!writeStorage){
+                        Toast.makeText(this, "Manque autorisation ecriture", Toast.LENGTH_LONG).show();
+                    }
 
-                //initializeMapsAndPositioning();
-                break;
-            }
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                    if (gps && readStorage && writeStorage){
+                        mEnregistrerTrouButton.callOnClick(); // onRequestPermissionsResult is called after a mEnregistrerTrouButton click
+                    }
+
+                }
         }
     }
 

@@ -1,10 +1,19 @@
 package com.provencale.provimplanttir;
 
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,7 +33,7 @@ public class ManageTrous extends AppCompatActivity {
     ListView listTrous;
 
     Volees volees;
-
+    private final static int REQUEST_CODE_PERM_RW = 1001;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("ManageTrous","onCreate:start");
@@ -38,6 +47,13 @@ public class ManageTrous extends AppCompatActivity {
                 finish();// return to Main Activity
             }
         });
+
+        Boolean flag = checkPermissions();
+        if (!flag){
+            Log.v("ManageTrous:onCreate", "checkPermissions=False");
+            requestPermission();
+            return;
+        }
 
         this.volees = new Volees(this);
         Log.d("ManageTrous","onCreate:volees"+this.volees.toString());
@@ -123,5 +139,41 @@ public class ManageTrous extends AppCompatActivity {
             return convertView;
         }
 
+    }
+    private Boolean checkPermissions() {
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // Only when the app's target SDK is 23 or higher
+            return true;
+        }
+        int readStoragePermission = ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE);
+        int writeStoragePermission = ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE);
+
+        return readStoragePermission == PackageManager.PERMISSION_GRANTED &&
+                writeStoragePermission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermission() {
+        Log.v("requestPermission", "called");
+        ActivityCompat.requestPermissions(ManageTrous.this, new String[]{ READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, this.REQUEST_CODE_PERM_RW);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.v("onRequestPermissionsResult", "called");
+        switch (requestCode) {
+
+            case REQUEST_CODE_PERM_RW:
+                if (grantResults.length > 0) {
+                    Log.v("onRequestPermissionsResult", "grantResults.length>0");
+                    boolean readStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    boolean writeStorage = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+
+                    if (!readStorage){
+                        Toast.makeText(this, "Manque autorisation lecture", Toast.LENGTH_LONG).show();
+                    }
+                    if (!writeStorage){
+                        Toast.makeText(this, "Manque autorisation ecriture", Toast.LENGTH_LONG).show();
+                    }
+                }
+        }
     }
 }

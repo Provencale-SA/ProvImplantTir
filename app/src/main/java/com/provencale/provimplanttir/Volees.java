@@ -30,6 +30,7 @@ public class Volees {
         if(isFilePresent) {
             Log.d("Volees","File found");
             this.read(context);
+
             //do the json parsing here and do the rest of functionality of app
         } else {
             boolean isFileCreated = this.create(context);
@@ -83,8 +84,12 @@ public class Volees {
     };
 
 
-    public void fromString(String jsonString) {
+    public void fromString(String jsonString) throws JSONException {
         Log.d("Volees","fromString");
+        if (jsonString.trim().isEmpty()) {
+            setTrous.clear();
+            return;
+        }
         try {
             JSONObject jsnobject = new JSONObject(jsonString);
             JSONArray jsonArray = jsnobject.getJSONArray("volees");
@@ -98,6 +103,7 @@ public class Volees {
         } catch (JSONException e) {
             Log.e("Volees","fromString:JSONException");
             //e.printStackTrace();
+            throw e;
         }
     }
 
@@ -109,12 +115,33 @@ public class Volees {
 
     public void read(Context context) {
         Log.d("Volees","read");
-        this.fromString(readFile(context));
+        String jsonString = readFile(context);
+
+        try {
+            this.fromString(jsonString);
+        } catch (JSONException e) {
+            // the  file is malformed, let save it and create a new one to keep going
+            Log.e("Volees","read:the file is malformed");
+            boolean res = this.saveAndCleanFile(context,jsonString);
+
+            if (!res){
+                Log.e("Volees","read:Cannot save reset the file");
+            }
+            // let s continue as the file was empty
+            try {
+                this.fromString("");
+            } catch (JSONException e2) {
+                Log.e("Volees","read:Should not happen something is wrong");
+
+            }
+        }
+
     }
     private String readFile(Context context) {
         Log.d("Volees","readFile");
         try {
-            FileInputStream fis = context.openFileInput(this.FILENAME);
+            File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+            FileInputStream fis = new FileInputStream(myExternalFile);
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader bufferedReader = new BufferedReader(isr);
             StringBuilder sb = new StringBuilder();
@@ -142,7 +169,8 @@ public class Volees {
     private boolean writeFile(Context context, String jsonString) {
         Log.d("Volees","writeFile");
         try {
-            FileOutputStream fos = context.openFileOutput(this.FILENAME, Context.MODE_PRIVATE);
+            File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+            FileOutputStream fos = new FileOutputStream(myExternalFile);
             if (jsonString != null) {
                 fos.write(jsonString.getBytes());
             }
@@ -160,15 +188,50 @@ public class Volees {
 
     public boolean create(Context context) {
         Log.d("Volees","Create");
-        return writeFile(context, "");
+        File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+        try {
+            boolean success_created = myExternalFile.createNewFile();
+            return success_created;
+        } catch (IOException ioException) {
+            Log.e("Volees","create:ioException");
+            return false;
+        }
     }
 
     public boolean isFilePresent(Context context) {
         Log.d("Volees","isFilePresent");
-        String path = context.getFilesDir().getAbsolutePath() + "/" + this.FILENAME;
-        File file = new File(path);
-        return file.exists();
+        File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+        return myExternalFile.exists();
     }
+    public boolean saveAndCleanFile(Context context,String stringPreviousFile) {
+        // This is called when the base file is malformed : Let s keep a copy and clean the original
+        Long tsLong = System.currentTimeMillis()/1000;
+        String timestamp = tsLong.toString();
 
+
+        try {
+            File savFile = new File(context.getExternalFilesDir(null), "sav_"+timestamp+"_"+this.FILENAME);
+            boolean success_created = savFile.createNewFile();
+            if (!success_created){
+                return false;
+            }
+            FileOutputStream fos = new FileOutputStream(savFile);
+            if (stringPreviousFile != null) {
+                fos.write(stringPreviousFile.getBytes());
+            }
+            fos.close();
+
+        } catch (FileNotFoundException fileNotFound) {
+            Log.e("Volees","saveAndCleanFile:fileNotFound");
+            return false;
+        } catch (IOException ioException) {
+            Log.e("Volees","saveAndCleanFile:ioException");
+            return false;
+        }
+
+
+        // now let s clean the original
+        return writeFile(context, "");
+    }
 
 }
