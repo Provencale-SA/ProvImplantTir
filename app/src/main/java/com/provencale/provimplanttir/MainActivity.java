@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
     // this is done to save the battery life of the device
     // there are various other other criteria you can search for..
     public Criteria gps_criteria = new Criteria();
-    public final static float GPS_PRECISION_HORIZONTAL = 5.0F;// meters ; cannot save position unless it is within range
-    public final static float GPS_PRECISION_VERTICAL = 7.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_HORIZONTAL = 10.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_VERTICAL = 12.0F;// meters ; cannot save position unless it is within range
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
             if (!flag){
                 Log.v("BUTTONS", "checkPermissions=False");
                 requestPermission();
+                // calls mEnregistrerTrouButton click after the permission is given
                 return;
             }
 
@@ -209,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
             if (!gpsFlag){
                 Log.v("BUTTONS", "checkGPSWorking=False");
                 alertboxGPSDisabled();
+                mEnregistrerTrouButton.setEnabled(true); // to be able to have the button withou change Volee input
                 return;
             }
 
