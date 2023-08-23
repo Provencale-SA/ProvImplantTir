@@ -22,6 +22,7 @@ import android.location.LocationListener;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.Settings;
 
 import android.app.AlertDialog;
@@ -31,6 +32,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import android.util.Log; // Pour utiliser Log.d(“test”, “resultat test”);
@@ -51,47 +53,26 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_PERM_GPS = 1002;
 
     private LocationManager mLocationManager;
-    //private LocationListener mLocationListener;
-    final Looper looper = null;
+    private MLocationListener mLocationListener;
+    private static final int LOCATION_INTERVAL = 1000;
+    private static final float LOCATION_DISTANCE = 0f;
     public int gps_loop_for_accuracy;
     private static int MAX_GPS_LOOP = 30;
     public boolean verify_gps_accuracy; // used to check or bypass a security on gps accuracy
-
-    // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
-    // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
-
+    public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; cannot save position unless it is within range
     protected boolean gps_enabled;
+
+    private boolean enable_mEnregistrerTrouButton_next_fix;
 
     public Volees volees;
 
 
-    ///// Inspired from https://stackoverflow.com/questions/10524381/gps-android-get-positioning-only-once/38794291#38794291
-    // Now first make a criteria with your requirements
-    // this is done to save the battery life of the device
-    // there are various other other criteria you can search for..
-    public Criteria gps_criteria = new Criteria();
-    public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
-    public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; cannot save position unless it is within range
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // Setting GPS criteria
-        gps_criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        gps_criteria.setPowerRequirement(Criteria.POWER_HIGH); // Power high should improve accuracy
-        gps_criteria.setAltitudeRequired(true);
-        gps_criteria.setBearingRequired(false);
-        gps_criteria.setSpeedRequired(false);
-        gps_criteria.setCostAllowed(true);
-        gps_criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-        gps_criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
-        //ACCURACY_HIGH less than 100 meters : not enough
-        //ACCURACY_MEDIUM between 100 - 500 meters
-        //ACCURACY_LOW greater than 500 meters
 
 
         buttonSwitchManageTrouActivity = findViewById(R.id.main_button_suppr_trous);
@@ -108,8 +89,10 @@ public class MainActivity extends AppCompatActivity {
 
         mEnregistrerTrouButton = findViewById(R.id.main_button_enregistrer_trou);
 
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        checkRequestPermStartLocationLis();
+        ////////////////////////////////////////////////////////////////////////////////////////////
 
-        mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
         // mEnregistrerTrouButton should be disabled if Nom de la Volee is empty
         mNomVoleeEditText.addTextChangedListener(new TextWatcher() {
@@ -142,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
 
         gps_loop_for_accuracy = 0;
         verify_gps_accuracy = true;
+        enable_mEnregistrerTrouButton_next_fix = true;
     }
 
     private void switchToManageTrousActivity() {
@@ -149,19 +133,54 @@ public class MainActivity extends AppCompatActivity {
         Intent switchActivityIntent = new Intent(this, ManageTrous.class);
         startActivity(switchActivityIntent);
     }
+
+    private void checkRequestPermStartLocationLis() {
+        if (mLocationListener == null) {
+            mLocationListener = new MLocationListener(LocationManager.GPS_PROVIDER);
+        }
+
+        Boolean permFlag = checkPermissions();
+        if (!permFlag) {
+            Log.v("checkRequestPermStartLocationLis", "checkPermissions=False");
+            requestPermission();
+            // calls mEnregistrerTrouButton click after the permission is given
+        }
+
+        Boolean gpsFlag = checkGPSWorking();
+        if (!gpsFlag) {
+            Log.v("checkRequestPermStartLocationLis", "checkGPSWorking=False");
+            alertboxGPSDisabled();
+        }
+        if (permFlag) {
+            mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            try {
+                mLocationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                        mLocationListener);
+            } catch (java.lang.SecurityException ex) {
+                Log.i("checkRequestPermStartLocationLis", "fail to request location update, ignore", ex);
+            } catch (IllegalArgumentException ex) {
+                Log.d("checkRequestPermStartLocationLis", "gps provider does not exist " + ex.getMessage());
+            }
+        }
+        // else do the same thing after permission granted
+    }
+
     @Override
     public void onStart() {
-        Log.d("myApp", "[#] " + this + " - onStart()");
+        Log.d("MainActivity", "[#] " + this + " - onStart()");
         super.onStart();
     }
 
     @Override
     public void onResume() {
-        Log.w("myApp", "[#] " + this + " - onResume()");
+        Log.w("MainActivity", "[#] " + this + " - onResume()");
         super.onResume();
 
-        // replace by checkPermissions()
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        checkRequestPermStartLocationLis();
+        // following is needed because android studio does not see the the permissin checking..
+        if (checkPermissions() ){
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -175,13 +194,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onStop() {
-        Log.d("myApp", "[#] " + this + " - onStop()");
+        Log.d("MainActivity", "[#] " + this + " - onStop()");
         super.onStop();
     }
 
     @Override
     protected void onPause() {
+        Log.d("MainActivity", "[#] " + this + " - onPause()");
         super.onPause();
+        if (mLocationListener != null){
+            mLocationManager.removeUpdates(mLocationListener);
+            mLocationListener = null;
+        }
     }
 
 
@@ -216,8 +240,7 @@ public class MainActivity extends AppCompatActivity {
 
 
             Log.v("BUTTONS", "checkPermissions=True");
-            mLocationManager.requestSingleUpdate(gps_criteria, gpsLocationListener, looper);
-
+            mLocationListener.registerLastPositionAsTrou();
         }
     };
 
@@ -341,7 +364,17 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if (gps && readStorage && writeStorage){
-                        mEnregistrerTrouButton.callOnClick(); // onRequestPermissionsResult is called after a mEnregistrerTrouButton click
+                        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                        try {
+                            mLocationManager.requestLocationUpdates(
+                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                                    mLocationListener);
+                        } catch (java.lang.SecurityException ex) {
+                            Log.i("onCreate", "fail to request location update, ignore", ex);
+                        } catch (IllegalArgumentException ex) {
+                            Log.d("onCreate", "gps provider does not exist " + ex.getMessage());
+                        }
+
                     }
 
                 }
@@ -355,7 +388,16 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, "Manque autorisation GPS", Toast.LENGTH_LONG).show();
                     }
                     else{
-                        mEnregistrerTrouButton.callOnClick(); // onRequestPermissionsResult is called after a mEnregistrerTrouButton click
+                        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                        try {
+                            mLocationManager.requestLocationUpdates(
+                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                                    mLocationListener);
+                        } catch (java.lang.SecurityException ex) {
+                            Log.i("onCreate", "fail to request location update, ignore", ex);
+                        } catch (IllegalArgumentException ex) {
+                            Log.d("onCreate", "gps provider does not exist " + ex.getMessage());
+                        }
                     }
                 }
                 break;
@@ -363,8 +405,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /*----------Listener class to get coordinates ------------- */
-    private final LocationListener gpsLocationListener = new LocationListener() {
+    private class MLocationListener implements LocationListener {
+        Location mLastLocation;
 
+        public MLocationListener(String provider)
+        {
+            Log.d("LocationListener", "LocationListener " + provider);
+            mLastLocation = new Location(provider);
+        }
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.d("LocationListener", "onStatusChanged:"+String.valueOf(status));
@@ -391,40 +439,90 @@ public class MainActivity extends AppCompatActivity {
             Log.v("LocationListener", "GPS Provider Disabled");
         }
 
+        @SuppressLint("NewApi")
         @Override
         public void onLocationChanged(Location location) {
-            boolean is_accurate_enough;
-            // This call should be triggered by requestSingleUpdate on button press
+            Log.v("LocationListener", "new location registered");
+            mLastLocation.set(location);
 
-            if (location != null) {
-//                Log.v("onLocationChanged", "New GPS location: "
+            TextView mHAccuLabel = (TextView) findViewById(R.id.main_textview_accu_h_val);
+            if (mLastLocation.hasAccuracy()) {
+                mHAccuLabel.setText(String.format("%.1f m",mLastLocation.getAccuracy()));
+            }
+            else {
+                mHAccuLabel.setText("NA");
+            }
+
+            TextView mVAccuLabel = (TextView) findViewById(R.id.main_textview_accu_v_val);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (mLastLocation.hasVerticalAccuracy()) {
+                    mVAccuLabel.setText(String.format("%.1f m",mLastLocation.getVerticalAccuracyMeters()));
+                }
+                else {
+                    mVAccuLabel.setText("NA");
+                }
+            }
+
+            // if needed reenable mEnregistrerTrouButton
+            if (enable_mEnregistrerTrouButton_next_fix) {
+                if (mLastLocation.hasAccuracy() && (mLastLocation.getAccuracy() < GPS_PRECISION_HORIZONTAL)
+                    && ((Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                        | (mLastLocation.hasVerticalAccuracy() && (mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL))
+                    )){
+                    mEnregistrerTrouButton.setEnabled(true);
+                    enable_mEnregistrerTrouButton_next_fix = false;
+                }
+            }
+            //                Log.v("onLocationChanged", "New GPS location: "
 //                        + String.format("%9.6f", location.getLatitude()) + ", "
 //                        + String.format("%9.6f", location.getLongitude())+ ", "
 //                        + String.format("%9.6f", location.getAltitude()) );
 
-                Log.v("onLocationChanged", "New GPS location: "
-                        + location.toString() );
+        }
+
+        public void registerLastPositionAsTrou() {
+            boolean is_accurate_enough;
+
+
+
+            // This call should be triggered by requestSingleUpdate on button press
+
+            if (mLastLocation != null) {
+                long timestamp_lasLoc = mLastLocation.getElapsedRealtimeNanos(); // since last reboot
+                Log.v("registerLastPositionAsTrou","timestamp_lasLoc"+String.valueOf(timestamp_lasLoc));
+                long current_timestamp = SystemClock.elapsedRealtimeNanos(); // since last reboot
+                long TWO_SEC_IN_NANOSEC = 2000000000L;
 
                 is_accurate_enough = true;
-                if (!location.hasAccuracy()){
+
+                Log.v("registerLastPositionAsTrou", "GPS location: "
+                        + mLastLocation.toString() );
+
+                if (TWO_SEC_IN_NANOSEC<(current_timestamp-timestamp_lasLoc)){
                     is_accurate_enough = false;
-                    Toast.makeText(getApplicationContext(), "Manque précision horizontale", Toast.LENGTH_LONG).show();
+                    double delay = ((double)(current_timestamp-timestamp_lasLoc))/1000000000.0;
+                    Toast.makeText(getApplicationContext(), "Temps trop long depuis dernière position: "+String.format("%.1f s",delay), Toast.LENGTH_LONG).show();
                 }
-                else{
-                    if (GPS_PRECISION_HORIZONTAL < location.getAccuracy()){
+                else {
+
+                    if (!mLastLocation.hasAccuracy()) {
                         is_accurate_enough = false;
-                        Toast.makeText(getApplicationContext(), "Précision horizontale ("+String.format("%.1f",location.getAccuracy())+"m) insuffisante.", Toast.LENGTH_LONG).show();
-                    }
-                    else{
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            if (!location.hasVerticalAccuracy()){
-                                is_accurate_enough = false;
-                                Toast.makeText(getApplicationContext(), "Manque précision verticale", Toast.LENGTH_LONG).show();
-                            }
-                            else {
-                                if (GPS_PRECISION_VERTICAL < location.getVerticalAccuracyMeters()) {
+                        Toast.makeText(getApplicationContext(), "Manque précision horizontale", Toast.LENGTH_LONG).show();
+                    } else {
+                        if (GPS_PRECISION_HORIZONTAL < mLastLocation.getAccuracy()) {
+                            is_accurate_enough = false;
+                            Toast.makeText(getApplicationContext(), "Précision horizontale (" + String.format("%.1f", mLastLocation.getAccuracy()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
+                        } else {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                if (!mLastLocation.hasVerticalAccuracy()) {
                                     is_accurate_enough = false;
-                                    Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", location.getVerticalAccuracyMeters()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getApplicationContext(), "Manque précision verticale", Toast.LENGTH_LONG).show();
+                                } else {
+                                    if (GPS_PRECISION_VERTICAL < mLastLocation.getVerticalAccuracyMeters()) {
+                                        is_accurate_enough = false;
+                                        Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", mLastLocation.getVerticalAccuracyMeters()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
+                                    }
                                 }
                             }
                         }
@@ -436,10 +534,10 @@ public class MainActivity extends AppCompatActivity {
 
                     int numeroRangee = mNumeroRangeeNumberPicker.getValue();
                     int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
-                    Log.v("onLocationChanged", "Avant : " + volees.toString());
+                    Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
                     volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                            location.getLatitude(), location.getLatitude(), location.getAltitude());
-                    Log.v("onLocationChanged", "Apres : " + volees.toString());
+                            mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude());
+                    Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
                     volees.write(getApplicationContext());
 
                     mNumeroTrouDansRangeeNumberPicker.add_one();
@@ -450,22 +548,31 @@ public class MainActivity extends AppCompatActivity {
 
                 }
                 else{
-                    Log.v("onLocationChanged", "insufficient accuracy:"+String.valueOf(location.getAccuracy()));
+                    Log.v("registerLastPositionAsTrou", "Position non fiable");
                     // let s try again -> This can create an infinite loop draining power
                     if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
-                        mLocationManager.requestSingleUpdate(gps_criteria, gpsLocationListener, looper);
+
+                        // let s try again in 1 sec
+                        int DELAY_BEFORE_RETRYING_REGISTER_LOC = 1000; // in ms
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                // This method will be executed once the timer is over
+                                registerLastPositionAsTrou();
+                            }
+                        }, DELAY_BEFORE_RETRYING_REGISTER_LOC);// Reactivate after 3000 ms
                         gps_loop_for_accuracy += 1;
                     }
                     else{
                         mEnregistrerTrouButton.setEnabled(true);
                         alertboxPrecision();
                     }
-
-
                 }
 
+
+
             } else{
-                Log.v("onLocationChanged", "location==null");
+                Log.v("registerLastPositionAsTrou", "location==null");
             }
         }
     };
