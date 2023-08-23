@@ -141,7 +141,10 @@ public class ManageTrous extends AppCompatActivity {
 
     }
     private Boolean checkPermissions() {
-        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // Only when the app's target SDK is 23 or higher
+        if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // Only when the app's target SDK is 23 or lower :  no permission
+            return true;
+        }
+        if (Build.VERSION_CODES.R <= android.os.Build.VERSION.SDK_INT) { // Only when the app's target SDK is 30 (11.0) or lower : no need for READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE
             return true;
         }
         int readStoragePermission = ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE);
@@ -153,6 +156,7 @@ public class ManageTrous extends AppCompatActivity {
 
     private void requestPermission() {
         Log.v("requestPermission", "called");
+        // For android 30 (11.0) and above READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE does nothing
         ActivityCompat.requestPermissions(ManageTrous.this, new String[]{ READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, this.REQUEST_CODE_PERM_RW);
     }
 

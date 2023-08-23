@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private final static int REQUEST_CODE_PERM_GPS_RW = 1000;
+    private final static int REQUEST_CODE_PERM_GPS = 1002;
+
     private LocationManager mLocationManager;
     //private LocationListener mLocationListener;
     final Looper looper = null;
@@ -218,13 +220,21 @@ public class MainActivity extends AppCompatActivity {
         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // Only when the app's target SDK is 23 or higher
             return true;
         }
-        int gpsPermission = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION);
-        int readStoragePermission = ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE);
-        int writeStoragePermission = ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE);
 
-        return gpsPermission == PackageManager.PERMISSION_GRANTED &&
-                readStoragePermission == PackageManager.PERMISSION_GRANTED &&
-                writeStoragePermission == PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION_CODES.R <= android.os.Build.VERSION.SDK_INT) { // Only when the app's target SDK is 30 (11.0) or lower : no need for READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE
+            int gpsPermission = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION);
+            return gpsPermission == PackageManager.PERMISSION_GRANTED;
+        }
+        else {
+
+            int gpsPermission = ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION);
+            int readStoragePermission = ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE);
+            int writeStoragePermission = ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE);
+
+            return gpsPermission == PackageManager.PERMISSION_GRANTED &&
+                    readStoragePermission == PackageManager.PERMISSION_GRANTED &&
+                    writeStoragePermission == PackageManager.PERMISSION_GRANTED;
+        }
     }
 
     private Boolean checkGPSWorking() {
@@ -237,7 +247,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void requestPermission() {
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{ACCESS_FINE_LOCATION, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, this.REQUEST_CODE_PERM_GPS_RW);
+        if (Build.VERSION_CODES.R <= android.os.Build.VERSION.SDK_INT) { // Only when the app's target SDK is 30 (11.0) or lower : no need for READ_EXTERNAL_STORAGE and WRITE_EXTERNAL_STORAGE
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{ACCESS_FINE_LOCATION }, this.REQUEST_CODE_PERM_GPS);
+        }
+        else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{ACCESS_FINE_LOCATION, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, this.REQUEST_CODE_PERM_GPS_RW);
+        }
+
     }
 
 
@@ -298,6 +314,20 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                 }
+                break;
+            case REQUEST_CODE_PERM_GPS:
+                if (grantResults.length > 0) {
+                    Log.v("onRequestPermissionsResult", "grantResults.length>0");
+                    boolean gps = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+                    if (!gps){
+                        Toast.makeText(this, "Manque autorisation GPS", Toast.LENGTH_LONG).show();
+                    }
+                    else{
+                        mEnregistrerTrouButton.callOnClick(); // onRequestPermissionsResult is called after a mEnregistrerTrouButton click
+                    }
+                }
+                break;
         }
     }
 
