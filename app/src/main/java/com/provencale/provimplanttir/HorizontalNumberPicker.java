@@ -14,8 +14,8 @@ import androidx.annotation.Nullable;
 
 public class HorizontalNumberPicker extends LinearLayout {
     private EditText et_number;
-    private int min = 0;
-    private int max = 9999;
+    private int min = 1;
+    private int max = 99;
 
     public HorizontalNumberPicker(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
