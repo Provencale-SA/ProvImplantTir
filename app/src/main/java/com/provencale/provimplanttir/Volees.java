@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -21,7 +22,7 @@ import org.json.JSONException;
 
 public class Volees {
     public String FILENAME = "storage.json";
-    private SortedSet<Trou> setTrous =  new TreeSet<Trou>() ;
+    private SortedSet<Trou> setTrous =  new TreeSet<Trou>(Collections.reverseOrder()) ;
 
     //Creator
     public Volees(Context context){
