@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     private LocationManager mLocationManager;
     private MLocationListener mLocationListener;
-    private static final int LOCATION_INTERVAL = 1000;
+    private static final int LOCATION_INTERVAL_IN_MS = 500;
     private static final float LOCATION_DISTANCE = 0f;
     public int gps_loop_for_accuracy;
     private static int MAX_GPS_LOOP = 30;
@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 mLocationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                        LocationManager.GPS_PROVIDER, LOCATION_INTERVAL_IN_MS, LOCATION_DISTANCE,
                         mLocationListener);
             } catch (java.lang.SecurityException ex) {
                 Log.i("checkRequestPermStartLocationLis", "fail to request location update, ignore", ex);
@@ -240,7 +240,18 @@ public class MainActivity extends AppCompatActivity {
 
 
             Log.v("BUTTONS", "checkPermissions=True");
-            mLocationListener.registerLastPositionAsTrou();
+
+            // let s call mLocationListener.registerLastPositionAsTrou(); after a small delay (to ensure a mLocationListener.mLastLocation is correct)
+            int DELAY_BEFORE_REGISTER_LOC = (int) (1.1* (float) LOCATION_INTERVAL_IN_MS); // in ms LOCATION_INTERVAL_IN_MS :500 ms -> just to ensure a position
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // This method will be executed once the timer is over
+                    mLocationListener.registerLastPositionAsTrou();
+                }
+            }, DELAY_BEFORE_REGISTER_LOC);// Reactivate after DELAY_BEFORE_RETRYING_REGISTER_LOC ms
+
+
         }
     };
 
@@ -367,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                         try {
                             mLocationManager.requestLocationUpdates(
-                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL_IN_MS, LOCATION_DISTANCE,
                                     mLocationListener);
                         } catch (java.lang.SecurityException ex) {
                             Log.i("onCreate", "fail to request location update, ignore", ex);
@@ -391,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
                         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                         try {
                             mLocationManager.requestLocationUpdates(
-                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL_IN_MS, LOCATION_DISTANCE,
                                     mLocationListener);
                         } catch (java.lang.SecurityException ex) {
                             Log.i("onCreate", "fail to request location update, ignore", ex);
@@ -492,17 +503,18 @@ public class MainActivity extends AppCompatActivity {
                 long timestamp_lasLoc = mLastLocation.getElapsedRealtimeNanos(); // since last reboot
                 Log.v("registerLastPositionAsTrou","timestamp_lasLoc"+String.valueOf(timestamp_lasLoc));
                 long current_timestamp = SystemClock.elapsedRealtimeNanos(); // since last reboot
-                long TWO_SEC_IN_NANOSEC = 2000000000L;
+                long LOC_EXPIRATION_IN_NANOSEC = 3000000L* (long) LOCATION_INTERVAL_IN_MS; // 3 * LOCATION_INTERVAL_IN_MS in nano seconds
 
                 is_accurate_enough = true;
 
                 Log.v("registerLastPositionAsTrou", "GPS location: "
                         + mLastLocation.toString() );
 
-                if (TWO_SEC_IN_NANOSEC<(current_timestamp-timestamp_lasLoc)){
+                if (LOC_EXPIRATION_IN_NANOSEC<(current_timestamp-timestamp_lasLoc)){
                     is_accurate_enough = false;
-                    double delay = ((double)(current_timestamp-timestamp_lasLoc))/1000000000.0;
+                    double delay = ((double)(current_timestamp-timestamp_lasLoc))/1000000000.0; // conversion nanoseconds in seconds
                     Toast.makeText(getApplicationContext(), "Temps trop long depuis dernière position: "+String.format("%.1f s",delay), Toast.LENGTH_LONG).show();
+                    mEnregistrerTrouButton.setEnabled(true);
                 }
                 else {
 
@@ -527,48 +539,46 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-                }
 
-                if(!verify_gps_accuracy | is_accurate_enough) { //  ok if location is precise enough (or if we bypass this security)
-                    String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
+                    if (!verify_gps_accuracy | is_accurate_enough) { //  ok if location is precise enough (or if we bypass this security)
+                        String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
 
-                    int numeroRangee = mNumeroRangeeNumberPicker.getValue();
-                    int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
-                    Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
-                    volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                            mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude());
-                    Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
-                    volees.write(getApplicationContext());
+                        int numeroRangee = mNumeroRangeeNumberPicker.getValue();
+                        int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                        Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
+                        volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                                mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude());
+                        Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
+                        volees.write(getApplicationContext());
 
-                    mNumeroTrouDansRangeeNumberPicker.add_one();
+                        mNumeroTrouDansRangeeNumberPicker.add_one();
 
-                    // now reallow the button
-                    mEnregistrerTrouButton.setEnabled(true);
-                    gps_loop_for_accuracy = 0;
-
-                }
-                else{
-                    Log.v("registerLastPositionAsTrou", "Position non fiable");
-                    // let s try again -> This can create an infinite loop draining power
-                    if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
-
-                        // let s try again in 1 sec
-                        int DELAY_BEFORE_RETRYING_REGISTER_LOC = 1000; // in ms
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                // This method will be executed once the timer is over
-                                registerLastPositionAsTrou();
-                            }
-                        }, DELAY_BEFORE_RETRYING_REGISTER_LOC);// Reactivate after 3000 ms
-                        gps_loop_for_accuracy += 1;
-                    }
-                    else{
+                        // now reallow the button
                         mEnregistrerTrouButton.setEnabled(true);
-                        alertboxPrecision();
+                        gps_loop_for_accuracy = 0;
+
+                    } else {
+                        Log.v("registerLastPositionAsTrou", "Position non fiable");
+                        // let s try again -> This can create an infinite loop draining power
+                        if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
+
+                            // let s try again in 1 sec
+                            int DELAY_BEFORE_RETRYING_REGISTER_LOC = 2000; // in ms
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // This method will be executed once the timer is over
+                                    registerLastPositionAsTrou();
+                                }
+                            }, DELAY_BEFORE_RETRYING_REGISTER_LOC);// Reactivate after DELAY_BEFORE_RETRYING_REGISTER_LOC ms
+
+                            gps_loop_for_accuracy += 1;
+                        } else {
+                            mEnregistrerTrouButton.setEnabled(true);
+                            alertboxPrecision();
+                        }
                     }
                 }
-
 
 
             } else{
