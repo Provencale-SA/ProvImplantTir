@@ -98,11 +98,7 @@ public class MainActivity extends AppCompatActivity {
         mNomVoleeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(s.toString().trim().length()==0){
-                    mEnregistrerTrouButton.setEnabled(false);
-                } else {
-                    mEnregistrerTrouButton.setEnabled(true);
-                }
+                mEnregistrerTrouButton_checkAndActivate();
             }
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count,
@@ -128,6 +124,25 @@ public class MainActivity extends AppCompatActivity {
         enable_mEnregistrerTrouButton_next_fix = true;
     }
 
+    private boolean mEnregistrerTrouButton_checkAndActivate(){
+        //return if button is activated or deactivated
+        CharSequence charInNomVolee = mNomVoleeEditText.getText();
+        //Log.v("mEnregistrerTrouButton_checkAndActivate","charInNomVolee:"+charInNomVolee.toString()+String.valueOf(mLocationListener.mLastLocation.hasAccuracy() && (mLocationListener.mLastLocation.getAccuracy() < GPS_PRECISION_HORIZONTAL))+":"+String.valueOf((mLocationListener.mLastLocation.hasVerticalAccuracy() && (mLocationListener.mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL))));
+        // checks if the button need to be activated or notaa
+        if((charInNomVolee.toString().trim().length() != 0) //charInNomVolee need to be  filled
+            && ((mLocationListener != null)
+                && (mLocationListener.mLastLocation.hasAccuracy() && (mLocationListener.mLastLocation.getAccuracy() < GPS_PRECISION_HORIZONTAL)
+                && ((Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                | (mLocationListener.mLastLocation.hasVerticalAccuracy() && (mLocationListener.mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL)))))){
+
+            mEnregistrerTrouButton.setEnabled(true);
+            return true;
+        } else {
+            mEnregistrerTrouButton.setEnabled(false);
+            return false;
+        }
+
+    }
     private void switchToManageTrousActivity() {
         Log.d("MainActivity", "switchToManageTrousActivity");
         Intent switchActivityIntent = new Intent(this, ManageTrous.class);
@@ -202,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         Log.d("MainActivity", "[#] " + this + " - onPause()");
         super.onPause();
-        if (mLocationListener != null){
+        if (mLocationManager != null && mLocationListener != null){
             mLocationManager.removeUpdates(mLocationListener);
             mLocationListener = null;
         }
@@ -354,6 +369,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.v("onRequestPermissionsResult", "called");
         switch (requestCode) {
 
@@ -450,7 +466,7 @@ public class MainActivity extends AppCompatActivity {
             Log.v("LocationListener", "GPS Provider Disabled");
         }
 
-        @SuppressLint("NewApi")
+
         @Override
         public void onLocationChanged(Location location) {
             Log.v("LocationListener", "new location registered");
@@ -477,11 +493,8 @@ public class MainActivity extends AppCompatActivity {
 
             // if needed reenable mEnregistrerTrouButton
             if (enable_mEnregistrerTrouButton_next_fix) {
-                if (mLastLocation.hasAccuracy() && (mLastLocation.getAccuracy() < GPS_PRECISION_HORIZONTAL)
-                    && ((Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                        | (mLastLocation.hasVerticalAccuracy() && (mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL))
-                    )){
-                    mEnregistrerTrouButton.setEnabled(true);
+                boolean buttonActivated = mEnregistrerTrouButton_checkAndActivate();
+                if (buttonActivated) {
                     enable_mEnregistrerTrouButton_next_fix = false;
                 }
             }
