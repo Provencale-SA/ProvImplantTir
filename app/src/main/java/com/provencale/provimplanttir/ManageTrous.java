@@ -26,6 +26,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
+
 //https://stackoverflow.com/questions/23586910/selecting-item-from-listview-and-delete-it-onclick-android-to-do-list-applicat
 public class ManageTrous extends AppCompatActivity {
 
@@ -94,6 +99,16 @@ public class ManageTrous extends AppCompatActivity {
             }
         }
 
+        public void setDateTime (TextView view,long timeUtc){
+            Calendar calendar = Calendar.getInstance();
+            TimeZone tz = TimeZone.getDefault();
+            calendar.add(Calendar.MILLISECOND, tz.getOffset(calendar.getTimeInMillis()));
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm", Locale.getDefault());
+            java.util.Date currenTimeZone =new java.util.Date(timeUtc);
+
+            view.setText(formatter.format(currenTimeZone));
+        }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             // Get the data item for this position
@@ -105,12 +120,14 @@ public class ManageTrous extends AppCompatActivity {
 
             // Lookup view for data population
             TextView tvNomVolee = (TextView) convertView.findViewById(R.id.tvNomVolee);
+            TextView tvTime = (TextView) convertView.findViewById(R.id.tvTime);
             TextView tvNumeroRangee = (TextView) convertView.findViewById(R.id.tvNumeroRangee);
             TextView tvNumeroTrou = (TextView) convertView.findViewById(R.id.tvNumeroTrou);
             ImageButton btDelete = (ImageButton)convertView.findViewById(R.id.btDelete);
 
             // Populate the data into the template view using the data object
             tvNomVolee.setText(trou.nomVolee);
+            setDateTime(tvTime,trou.timeUtc);
             tvNumeroRangee.setText(String.valueOf(trou.numeroRangee));
             tvNumeroTrou.setText(String.valueOf(trou.numeroTrou));
 

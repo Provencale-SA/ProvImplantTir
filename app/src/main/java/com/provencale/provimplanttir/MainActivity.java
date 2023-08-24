@@ -547,7 +547,8 @@ public class MainActivity extends AppCompatActivity {
                         int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
                         Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
                         volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                                mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude());
+                                mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude(),
+                                mLastLocation.getTime());
                         Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
                         volees.write(getApplicationContext());
 

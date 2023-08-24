@@ -20,9 +20,10 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+// File is stored in [Phone]\Mémoire de stockage interne\Android\data\com.provencale.provimplanttir\files\
 public class Volees {
-    public String FILENAME = "storage.json";
-    private SortedSet<Trou> setTrous =  new TreeSet<Trou>(Collections.reverseOrder()) ;
+    public String FILENAME = "volees.json";
+    private SortedSet<Trou> setTrous =  new TreeSet<Trou>() ; // the order is defined in Trou.compareTo
 
     //Creator
     public Volees(Context context){
@@ -47,9 +48,9 @@ public class Volees {
     }
 
     public void addtrou(String nomVolee, int numeroRangee, int numeroTrou,
-                   double latitude, double longitude, double altitude){
+                   double latitude, double longitude, double altitude, long timeUtc){
         Log.d("Volees","addtrou");
-        Trou trou = new Trou(nomVolee, numeroRangee, numeroTrou,latitude, longitude,  altitude);
+        Trou trou = new Trou(nomVolee, numeroRangee, numeroTrou,latitude, longitude,altitude,timeUtc);
         setTrous.add(trou);
 
     }
