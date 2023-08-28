@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_INTERVAL_IN_MS = 500;
     private static final float LOCATION_DISTANCE = 0f;
     public int gps_loop_for_accuracy;
-    private static int MAX_GPS_LOOP = 30;
+    private static int MAX_GPS_LOOP = 10;
     public boolean verify_gps_accuracy; // used to check or bypass a security on gps accuracy
     public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
     public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; cannot save position unless it is within range
@@ -577,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
                         if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
 
                             // let s try again in 1 sec
-                            int DELAY_BEFORE_RETRYING_REGISTER_LOC = 2000; // in ms
+                            int DELAY_BEFORE_RETRYING_REGISTER_LOC = 5000; // in ms
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
