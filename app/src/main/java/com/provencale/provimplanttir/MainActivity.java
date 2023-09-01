@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private static final float LOCATION_DISTANCE = 0f;
     public int gps_loop_for_accuracy;
     private static int MAX_GPS_LOOP = 10;
-    public boolean verify_gps_accuracy; // used to check or bypass a security on gps accuracy
+    public boolean bypass_gps_accuracy; // used to check or bypass a security on gps accuracy
     public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
     public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; if vertical accuracy available (some phones does not implement it) cannot save position unless it is within range.
 
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainActivity","onCreate:volees"+this.volees.toString());
 
         gps_loop_for_accuracy = 0;
-        verify_gps_accuracy = true;
+        bypass_gps_accuracy = false;
         enable_mEnregistrerTrouButton_next_fix = true;
     }
 
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int id) {
                                 // finish the current activity
                                 // AlertBoxAdvance.this.finish();
-                                verify_gps_accuracy = false;
+                                bypass_gps_accuracy = true; // until restart of app
 
                                 dialog.cancel();
                             }
@@ -508,95 +508,104 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void registerLastPositionAsTrou() {
-            boolean is_accurate_enough;
-
-
-
             // This call should be triggered by requestSingleUpdate on button press
+            boolean is_accurate_enough = true;
+            boolean is_error_skippeable = false; // is the error eligible to be skipped by bypass_gps_accuracy
 
-            if (mLastLocation != null) {
-                long timestamp_lasLoc = mLastLocation.getElapsedRealtimeNanos(); // since last reboot
-                Log.v("registerLastPositionAsTrou","timestamp_lasLoc"+String.valueOf(timestamp_lasLoc));
-                long current_timestamp = SystemClock.elapsedRealtimeNanos(); // since last reboot
-                long LOC_EXPIRATION_IN_NANOSEC = 3000000L* (long) LOCATION_INTERVAL_IN_MS; // 3 * LOCATION_INTERVAL_IN_MS in nano seconds
-
-                is_accurate_enough = true;
-
-                Log.v("registerLastPositionAsTrou", "GPS location: "
-                        + mLastLocation.toString() );
-
-                if (LOC_EXPIRATION_IN_NANOSEC<(current_timestamp-timestamp_lasLoc)){
+            if (mLastLocation == null) {
+                Toast.makeText(getApplicationContext(), "Position vide. Nouvel essai en cours." , Toast.LENGTH_LONG).show();
+                is_accurate_enough = false;
+                is_error_skippeable = false;
+                Log.v("registerLastPositionAsTrou", "location==null");
+            }
+            else {
+                long timestamp_lasLoc = mLastLocation.getElapsedRealtimeNanos(); // since last reboot /!\ on Android studio emulator (01/09/2023) it seems that this value is incorrect -> much higher. This is non blocking when used as below
+                if (timestamp_lasLoc == 0L) {// Seems to happen with position on gps start (security with button can be bypassed when pausing the app for example)
+                    Toast.makeText(getApplicationContext(), "Position bizarre. Nouvel essai en cours.", Toast.LENGTH_LONG).show();
                     is_accurate_enough = false;
-                    double delay = ((double)(current_timestamp-timestamp_lasLoc))/1000000000.0; // conversion nanoseconds in seconds
-                    Toast.makeText(getApplicationContext(), "Temps trop long depuis dernière position: "+String.format("%.1f s",delay), Toast.LENGTH_LONG).show();
-                    mEnregistrerTrouButton.setEnabled(true);
-                }
-                else {
+                    is_error_skippeable = false;
+                } else {
+                    long current_timestamp = SystemClock.elapsedRealtimeNanos(); // since last reboot
+                    long LOC_EXPIRATION_IN_NANOSEC = 3000000L * (long) LOCATION_INTERVAL_IN_MS; // 3 * LOCATION_INTERVAL_IN_MS in nano seconds
+                    Log.v("registerLastPositionAsTrou", "GPS location: "
+                            + mLastLocation.toString());
 
-                    if (!mLastLocation.hasAccuracy()) {
+                    if (LOC_EXPIRATION_IN_NANOSEC < (current_timestamp - timestamp_lasLoc)) {
                         is_accurate_enough = false;
-                        Toast.makeText(getApplicationContext(), "Manque précision horizontale", Toast.LENGTH_LONG).show();
+                        is_error_skippeable = false;
+                        double delay = ((double) (current_timestamp - timestamp_lasLoc)) / 1000000000.0; // conversion nanoseconds in seconds
+                        Toast.makeText(getApplicationContext(), "Temps trop long depuis dernière position: " + String.format("%.1f s", delay) + ". Nouvel essai en cours", Toast.LENGTH_LONG).show();
+                        mEnregistrerTrouButton.setEnabled(true);
                     } else {
-                        if (GPS_PRECISION_HORIZONTAL < mLastLocation.getAccuracy()) {
-                            is_accurate_enough = false;
-                            Toast.makeText(getApplicationContext(), "Précision horizontale (" + String.format("%.1f", mLastLocation.getAccuracy()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
-                        } else {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                if (mLastLocation.hasVerticalAccuracy()  // Some phone does not have vertical accuracy... So only check that if given
-                                        && (GPS_PRECISION_VERTICAL < mLastLocation.getVerticalAccuracyMeters())) {
-                                        is_accurate_enough = false;
-                                        Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", mLastLocation.getVerticalAccuracyMeters()) + "m) insuffisante.", Toast.LENGTH_LONG).show();
 
+                        if (!mLastLocation.hasAccuracy()) {
+                            is_accurate_enough = false;
+                            is_error_skippeable = true;
+                            Toast.makeText(getApplicationContext(), "Manque précision horizontale. Nouvel essai en cours", Toast.LENGTH_LONG).show();
+                        } else {
+                            if (GPS_PRECISION_HORIZONTAL < mLastLocation.getAccuracy()) {
+                                is_accurate_enough = false;
+                                is_error_skippeable = true;
+                                Toast.makeText(getApplicationContext(), "Précision horizontale (" + String.format("%.1f", mLastLocation.getAccuracy()) + "m) insuffisante. Nouvel essai en cours", Toast.LENGTH_LONG).show();
+                            } else {
+                                if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                                    &&(mLastLocation.hasVerticalAccuracy()  // Some phone does not have vertical accuracy... So only check that if given
+                                        && (GPS_PRECISION_VERTICAL < mLastLocation.getVerticalAccuracyMeters()))) {
+                                        is_accurate_enough = false;
+                                        is_error_skippeable = true;
+                                        Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", mLastLocation.getVerticalAccuracyMeters()) + "m) insuffisante. Nouvel essai en cours", Toast.LENGTH_LONG).show();
+
+                                    }
+                                else {
+                                    is_accurate_enough = true;
+                                    is_error_skippeable = true;
                                 }
                             }
                         }
                     }
-
-                    if (!verify_gps_accuracy | is_accurate_enough) { //  ok if location is precise enough (or if we bypass this security)
-                        String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
-
-                        int numeroRangee = mNumeroRangeeNumberPicker.getValue();
-                        int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
-                        Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
-                        volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                                mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude(),
-                                mLastLocation.getTime());
-                        Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
-                        volees.write(getApplicationContext());
-
-                        mNumeroTrouDansRangeeNumberPicker.add_one();
-
-                        // now reallow the button
-                        mEnregistrerTrouButton.setEnabled(true);
-                        gps_loop_for_accuracy = 0;
-
-                    } else {
-                        Log.v("registerLastPositionAsTrou", "Position non fiable");
-                        // let s try again -> This can create an infinite loop draining power
-                        if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
-
-                            // let s try again in 1 sec
-                            int DELAY_BEFORE_RETRYING_REGISTER_LOC = 5000; // in ms
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    // This method will be executed once the timer is over
-                                    registerLastPositionAsTrou();
-                                }
-                            }, DELAY_BEFORE_RETRYING_REGISTER_LOC);// Reactivate after DELAY_BEFORE_RETRYING_REGISTER_LOC ms
-
-                            gps_loop_for_accuracy += 1;
-                        } else {
-                            mEnregistrerTrouButton.setEnabled(true);
-                            alertboxPrecision();
-                        }
-                    }
                 }
-
-
-            } else{
-                Log.v("registerLastPositionAsTrou", "location==null");
             }
+
+            if (is_accurate_enough | (bypass_gps_accuracy && is_error_skippeable) ) { //  ok if location is precise enough (or if we bypass this security)
+                String nomVolee = mNomVoleeEditText.getText().toString().trim(); // trim remove spaces
+
+                int numeroRangee = mNumeroRangeeNumberPicker.getValue();
+                int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
+                Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
+                volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                        mLastLocation.getLatitude(), mLastLocation.getLatitude(), mLastLocation.getAltitude(),
+                        mLastLocation.getTime());
+                Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
+                volees.write(getApplicationContext());
+
+                mNumeroTrouDansRangeeNumberPicker.add_one();
+
+                // now reallow the button
+                mEnregistrerTrouButton.setEnabled(true);
+                gps_loop_for_accuracy = 0;
+
+            } else {
+                Log.v("registerLastPositionAsTrou", "Position non fiable");
+                // let s try again -> This can create an infinite loop draining power
+                if (gps_loop_for_accuracy < MAX_GPS_LOOP) {
+
+                    // let s try again in 1 sec
+                    int DELAY_BEFORE_RETRYING_REGISTER_LOC = 5000; // in ms
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // This method will be executed once the timer is over
+                            registerLastPositionAsTrou();
+                        }
+                    }, DELAY_BEFORE_RETRYING_REGISTER_LOC);// Reactivate after DELAY_BEFORE_RETRYING_REGISTER_LOC ms
+
+                    gps_loop_for_accuracy += 1;
+                } else {
+                    mEnregistrerTrouButton.setEnabled(true);
+                    alertboxPrecision();
+                }
+            }
+
         }
     };
 
