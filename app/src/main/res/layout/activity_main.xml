@@ -126,7 +126,7 @@
                     android:id="@+id/main_textview_accu_h_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Précision horizontale (conf 68%)"
+                    android:text="Précision horizontale (1σ)"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <TextView
@@ -153,7 +153,7 @@
                     android:id="@+id/main_textview_accu_v_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Précision verticale (conf 68%)"
+                    android:text="Précision verticale (1σ)"
                     app:layout_constraintStart_toStartOf="parent" />
 
                 <TextView
