@@ -10,8 +10,8 @@ android {
         applicationId "com.provencale.provimplanttir"
         minSdk 24
         targetSdk 33
-        versionCode 12 // Change to a higher number each release
-        versionName "1.11" // Change to a higher number  each release
+        versionCode 13 // Change to a higher number each release
+        versionName "1.12" // Change to a higher number  each release
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
