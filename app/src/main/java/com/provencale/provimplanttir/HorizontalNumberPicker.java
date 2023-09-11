@@ -61,6 +61,9 @@ public class HorizontalNumberPicker extends LinearLayout {
         add_diff(1);
     }
 
+    public void minus_one() {
+        add_diff(-1);
+    }
 
     /***
      * GETTERS & SETTERS

@@ -101,6 +101,18 @@
                 android:hint="Numéro de trou dans rangée" />
         </LinearLayout>
 
+        <Switch
+            android:id="@+id/IncrTrouSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Incrément automatique trou"
+            android:textOff="Décroissant"
+            android:textOn="Croissant"
+            android:showText="true"
+            android:thumbTint="#2F6699"
+            android:trackTint="#449DEF" />
+
         <Button
             android:id="@+id/main_button_enregistrer_trou"
             android:layout_width="wrap_content"

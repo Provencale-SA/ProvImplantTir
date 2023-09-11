@@ -32,6 +32,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText mNomVoleeEditText;
     private HorizontalNumberPicker mNumeroRangeeNumberPicker;
     private HorizontalNumberPicker mNumeroTrouDansRangeeNumberPicker;
+    private Switch mIncrementTrouSwitch;
     private Button mEnregistrerTrouButton;
 
 
@@ -89,6 +91,10 @@ public class MainActivity extends AppCompatActivity {
         mNumeroTrouDansRangeeNumberPicker = findViewById(R.id.main_edittext_numero_trou_dans_rangee);
 
         mEnregistrerTrouButton = findViewById(R.id.main_button_enregistrer_trou);
+
+        /*Add in Oncreate() funtion after setContentView()*/
+
+        mIncrementTrouSwitch = (Switch) findViewById(R.id.IncrTrouSwitch); // initiate Switch
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         checkRequestPermStartLocationLis();
@@ -580,7 +586,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
                 volees.write(getApplicationContext());
 
-                mNumeroTrouDansRangeeNumberPicker.add_one();
+                if (mIncrementTrouSwitch.isChecked()) {
+                    mNumeroTrouDansRangeeNumberPicker.add_one();
+                } else {
+                    mNumeroTrouDansRangeeNumberPicker.minus_one();
+                }
 
                 // now reallow the button
                 mEnregistrerTrouButton.setEnabled(true);
