@@ -195,6 +195,8 @@ public class MainActivity extends AppCompatActivity {
         Log.w("MainActivity", "[#] " + this + " - onResume()");
         super.onResume();
 
+        this.volees.read(this); // lets reread the volees file (in case of a change)
+
         checkRequestPermStartLocationLis();
         // following is needed because android studio does not see the the permissin checking..
         if (checkPermissions() ){

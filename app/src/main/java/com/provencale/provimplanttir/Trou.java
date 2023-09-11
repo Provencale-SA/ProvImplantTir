@@ -1,10 +1,13 @@
 package com.provencale.provimplanttir;
 
+import android.util.Log;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
 public class Trou implements Comparable<Trou> {
-    // Position GPS (ie WGS 84)
+    ////////   /!\ Position in GPS standard (ie WGS 84)/////////////////////////////////////////////
     public Double latitude;
     public Double longitude;
     public Double altitude;
@@ -24,41 +27,62 @@ public class Trou implements Comparable<Trou> {
         this.timeUtc = timeUtc;
     }
 
-    public Trou (JSONObject jsonObject){
+    public Trou (JSONObject jsonObject) throws JSONException {
         try {
-            this.nomVolee = jsonObject.getString("nomVolee");;
-            this.numeroRangee = jsonObject.getInt("numeroRangee");
-            this.numeroTrou = jsonObject.getInt("numeroTrou");
-            this.latitude = jsonObject.getDouble("latitude");
-            this.longitude = jsonObject.getDouble("longitude");
-            this.altitude = jsonObject.getDouble("altitude");
-            if (jsonObject.isNull("timeUtc")){ // checks if timeUtc is present and if null
+            JSONObject jsonTrouProperties = jsonObject.getJSONObject("properties");
+            this.nomVolee = jsonTrouProperties.getString("nomVolee");;
+            this.numeroRangee = jsonTrouProperties.getInt("numeroRangee");
+            this.numeroTrou = jsonTrouProperties.getInt("numeroTrou");
+            if (jsonTrouProperties.isNull("timeUtc")){ // checks if timeUtc is present and if null
                 this.timeUtc = 0L;
             }
             else{
-                this.timeUtc = jsonObject.getLong("timeUtc");
+                this.timeUtc = jsonTrouProperties.getLong("timeUtc");
             }
 
+            JSONObject jsonTrouGeo = jsonObject.getJSONObject("geometry");
+            JSONArray jsonArrayCoord = jsonTrouGeo.getJSONArray("coordinates");
+            this.longitude = jsonArrayCoord.getDouble(0); // Longitude then latitude then altitude in geoJson Position
+            this.latitude = jsonArrayCoord.getDouble(1);
+            this.altitude = jsonArrayCoord.getDouble(2);
 
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            Log.e("Trou","Trou:JSONException:"+e.toString());
+            throw e;
             //            e.printStackTrace();
             //            return new JSONObject();
         }
     }
 
     public JSONObject toJson() {
+        // Let s write it as a Feature in a GeoJSON
         try {
             JSONObject jsonTrou = new JSONObject();
-            jsonTrou.put("nomVolee",this.nomVolee);
-            jsonTrou.put("numeroRangee",this.numeroRangee);
-            jsonTrou.put("numeroTrou",this.numeroTrou);
-            jsonTrou.put("latitude",this.latitude);
-            jsonTrou.put("longitude",this.longitude);
-            jsonTrou.put("altitude",this.altitude);
-            jsonTrou.put("timeUtc",this.timeUtc);
+            jsonTrou.put("type","Feature");
+
+            JSONObject jsonTrouProperties = new JSONObject();
+            jsonTrouProperties.put("name",String.format("%s%02d%02d", this.nomVolee,this.numeroRangee,this.numeroTrou));//nomVolee+numeroRangeeOnDigits+numeroTrouOn2Digits //NOT TAKEN INTO ACCOUNT WHEN READING THE FILE
+            jsonTrouProperties.put("nomVolee",this.nomVolee);
+            jsonTrouProperties.put("numeroRangee",this.numeroRangee);
+            jsonTrouProperties.put("numeroTrou",this.numeroTrou);
+            jsonTrouProperties.put("timeUtc",this.timeUtc);
+            jsonTrou.put("properties",jsonTrouProperties);
+
+
+            JSONObject jsonTrouGeo = new JSONObject();
+            jsonTrouGeo.put("type","Point");
+
+            JSONArray jsonArrayCoord = new JSONArray();// Longitude then latitude then altitude in geoJson Position
+            jsonArrayCoord.put(this.longitude);
+            jsonArrayCoord.put(this.latitude);
+            jsonArrayCoord.put(this.altitude); // can also be put in Properties (but makes it redundant)
+            jsonTrouGeo.put("coordinates",jsonArrayCoord);
+
+            jsonTrou.put("geometry",jsonTrouGeo);
+
             return jsonTrou;
         } catch (JSONException e) {
+            Log.e("Trou","toJson:JSONException:"+e.toString());
             throw new RuntimeException(e);
             //            e.printStackTrace();
             //            return new JSONObject();

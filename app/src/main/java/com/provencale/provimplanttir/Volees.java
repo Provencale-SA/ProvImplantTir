@@ -22,7 +22,7 @@ import org.json.JSONException;
 
 // File is stored in [Phone]\Mémoire de stockage interne\Android\data\com.provencale.provimplanttir\files\
 public class Volees {
-    public String FILENAME = "volees.json";
+    public String FILENAME = "volees.geojson";
     private SortedSet<Trou> setTrous =  new TreeSet<Trou>() ; // the order is defined in Trou.compareTo
 
     //Creator
@@ -66,17 +66,22 @@ public class Volees {
     };
 
     public String toString() {
+        // here we ant to create de geojson (FeatureCollection of Points with nomVolee, numeroRangee, numeroTrou, timeUtc as properties and also nomVolee+numeroRangeOn2digits+numeroTrouOn2Digit as optional name (for easier view in googleEarth)
+
         Log.d("Volees","toString");
         try {
-            JSONArray jsonArray = new JSONArray();
+            // Let s prepare the Points
+            JSONArray jsonArrayFeatures = new JSONArray();
             for (Trou t : this.setTrous) {
                 JSONObject jsonTrou = t.toJson();
-                jsonArray.put(jsonTrou);
+                jsonArrayFeatures.put(jsonTrou);
             }
 
-            JSONObject volees = new JSONObject();
-            volees.put("volees", jsonArray);
-            return volees.toString();
+            // now lets create let s encapsulate the geoJSON
+            JSONObject jsonbjectFull = new JSONObject();
+            jsonbjectFull.put("type", "FeatureCollection");
+            jsonbjectFull.put("features", jsonArrayFeatures);
+            return jsonbjectFull.toString();
         } catch (JSONException e) {
             Log.e("Volees","toString:JSONException");
             //e.printStackTrace();
@@ -93,13 +98,13 @@ public class Volees {
             return;
         }
         try {
-            JSONObject jsnobject = new JSONObject(jsonString);
-            JSONArray jsonArray = jsnobject.getJSONArray("volees");
-            Log.d("Volees","fromString:length"+String.valueOf(jsonArray.length()));
+            JSONObject jsonbjectFull = new JSONObject(jsonString);
+            JSONArray jsonArrayFeatures = jsonbjectFull.getJSONArray("features");
+            Log.d("Volees","fromString:length "+String.valueOf(jsonArrayFeatures.length()));
 
             setTrous.clear();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                Trou trou = new Trou(jsonArray.getJSONObject(i));
+            for (int i = 0; i < jsonArrayFeatures.length(); i++) {
+                Trou trou = new Trou(jsonArrayFeatures.getJSONObject(i));
                 setTrous.add(trou);
             }
         } catch (JSONException e) {

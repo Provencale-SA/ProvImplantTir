@@ -61,7 +61,7 @@ public class ManageTrous extends AppCompatActivity {
         }
 
         this.volees = new Volees(this);
-        Log.d("ManageTrous","onCreate:volees"+this.volees.toString());
+        Log.d("ManageTrous","onCreate:this.volees:"+this.volees.toString());
 
         // Create the adapter to convert the array to views
         TrousAdapter adapter = new TrousAdapter(this, this.volees);
@@ -69,7 +69,7 @@ public class ManageTrous extends AppCompatActivity {
         // Attach the adapter to a ListView
         listTrous = (ListView)findViewById(R.id.listTrous);
         listTrous.setAdapter(adapter);
-        Log.d("ManageTrous","onCreate:end:volees"+this.volees.toString());
+        Log.d("ManageTrous","onCreate:end:this.volees:"+this.volees.toString());
     }
 
     public class TrousAdapter extends ArrayAdapter<Trou> {
@@ -79,22 +79,26 @@ public class ManageTrous extends AppCompatActivity {
 
         private void deleteItem(int position) {
             if (position >=0) {
-                Trou trou = getItem(position);
-                boolean result = volees.removeTrou(trou);// remove from volees (ie the common data with MainActivity)
-                if (result)  {
-                    Toast.makeText(getApplicationContext(),
-                            "Suppresion de " + String.valueOf(trou.nomVolee) + ";" + String.valueOf(trou.numeroRangee) + ";" + String.valueOf(trou.numeroTrou),
-                            Toast.LENGTH_SHORT).show();
+                try {
+                    Trou trou = getItem(position);
+                    boolean result = volees.removeTrou(trou);// remove from volees (ie the common data with MainActivity)
+                    if (result) {
+                        Toast.makeText(getApplicationContext(),
+                                "Suppresion de " + String.valueOf(trou.nomVolee) + ";" + String.valueOf(trou.numeroRangee) + ";" + String.valueOf(trou.numeroTrou),
+                                Toast.LENGTH_SHORT).show();
 
-                    volees.write(getApplicationContext()); // write to file
-                    this.remove(trou); // Now lets remove it on the current screen. The data is a duplicate of volees
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),
-                            "Echec suppression",
-                            Toast.LENGTH_SHORT).show();
-                }
+                        volees.write(getApplicationContext()); // write to file
+                        this.remove(trou); // Now lets remove it on the current screen. The data is a duplicate of volees
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                                "Echec suppression",
+                                Toast.LENGTH_SHORT).show();
+                    }
 
+                } catch (IndexOutOfBoundsException e) {
+                    Toast.makeText(getApplicationContext(),"Problème lors de la suppression",Toast.LENGTH_SHORT).show();
+                    Log.e("ManageTrous","TrousAdapter:deleteItem:Cannot getItem, Item probably already deleted");
+                }
                 this.notifyDataSetChanged(); // force a view update (needed after this.remove(trou))
             }
         }
