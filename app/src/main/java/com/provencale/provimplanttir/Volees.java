@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -47,7 +48,7 @@ public class Volees {
     }
 
     public void addtrou(String nomVolee, int numeroRangee, int numeroTrou,
-                   double latitude, double longitude, double altitude, long timeUtc){
+                   double latitude, double longitude, double altitude, Date timeUtc){
         Log.d("Volees","addtrou");
         Trou trou = new Trou(nomVolee, numeroRangee, numeroTrou,latitude, longitude,altitude,timeUtc);
         setTrous.add(trou);

@@ -42,6 +42,12 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION ;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
 public class MainActivity extends AppCompatActivity {
     private Button buttonSwitchManageTrouActivity;
     private EditText mNomVoleeEditText;
@@ -580,9 +586,12 @@ public class MainActivity extends AppCompatActivity {
                 int numeroRangee = mNumeroRangeeNumberPicker.getValue();
                 int numeroTrou = mNumeroTrouDansRangeeNumberPicker.getValue();
                 Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
+
+                Date mDateTime = new java.util.Date(mLastLocation.getTime());
+
                 volees.addtrou(nomVolee, numeroRangee, numeroTrou,
                         mLastLocation.getLatitude(), mLastLocation.getLongitude(), mLastLocation.getAltitude(),
-                        mLastLocation.getTime());
+                        mDateTime);
                 Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
                 volees.write(getApplicationContext());
 

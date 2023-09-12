@@ -6,18 +6,23 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class Trou implements Comparable<Trou> {
     ////////   /!\ Position in GPS standard (ie WGS 84)/////////////////////////////////////////////
     public Double latitude;
     public Double longitude;
     public Double altitude;
-    public Long timeUtc;// GPS timestamp in UTC : Unix epoch time of this location fix
+    public Date timeUtc;// GPS timestamp in UTC : Unix epoch time of this location fix
     public Integer numeroTrou; // Dans rangee
     public Integer numeroRangee; // Dans volee
     public String nomVolee;
 
     public Trou (String nomVolee, int numeroRangee, int numeroTrou,
-                 double latitude, double longitude, double altitude, long timeUtc){
+                 double latitude, double longitude, double altitude, Date timeUtc){
         this.nomVolee = nomVolee;
         this.numeroRangee = numeroRangee;
         this.numeroTrou = numeroTrou;
@@ -27,6 +32,35 @@ public class Trou implements Comparable<Trou> {
         this.timeUtc = timeUtc;
     }
 
+    private static Date parseJsontoDate(String text) throws JSONException {
+        try {
+            if (text.length() == 19) { // assume no timezone : GMT
+                text = text + "GMT-00:00";
+            } else {
+                if (text.endsWith("Z")) {
+                    text = text.substring(0, text.length() - 1) + "GMT-00:00";
+                } else{
+                    int inset = 6;// assume +00:00
+                    String s0 = text.substring(0, text.length() - inset);
+                    String s1 = text.substring(text.length() - inset, text.length());
+                    text = s0 + "GMT" + s1;
+                }
+            }
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
+            return dateFormat.parse(text);
+        } catch (ParseException e ){
+            Log.e("Trou","parseJsontoDate:ParseException:"+e.toString());
+            throw new JSONException("Invalid timeutc format");
+        }
+    }
+
+    private static String parseDateToJson(Date timeutc) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+        TimeZone tz = TimeZone.getTimeZone( "UTC" );
+        dateFormat.setTimeZone(tz);
+        return dateFormat.format( timeutc );
+    }
+
     public Trou (JSONObject jsonObject) throws JSONException {
         try {
             JSONObject jsonTrouProperties = jsonObject.getJSONObject("properties");
@@ -34,10 +68,10 @@ public class Trou implements Comparable<Trou> {
             this.numeroRangee = jsonTrouProperties.getInt("numeroRangee");
             this.numeroTrou = jsonTrouProperties.getInt("numeroTrou");
             if (jsonTrouProperties.isNull("timeUtc")){ // checks if timeUtc is present and if null
-                this.timeUtc = 0L;
+                this.timeUtc = new java.util.Date(0L);
             }
             else{
-                this.timeUtc = jsonTrouProperties.getLong("timeUtc");
+                this.timeUtc = parseJsontoDate(jsonTrouProperties.getString("timeUtc"));
             }
 
             JSONObject jsonTrouGeo = jsonObject.getJSONObject("geometry");
@@ -65,7 +99,7 @@ public class Trou implements Comparable<Trou> {
             jsonTrouProperties.put("nomVolee",this.nomVolee);
             jsonTrouProperties.put("numeroRangee",this.numeroRangee);
             jsonTrouProperties.put("numeroTrou",this.numeroTrou);
-            jsonTrouProperties.put("timeUtc",this.timeUtc);
+            jsonTrouProperties.put("timeUtc",parseDateToJson(this.timeUtc));
             jsonTrou.put("properties",jsonTrouProperties);
 
 

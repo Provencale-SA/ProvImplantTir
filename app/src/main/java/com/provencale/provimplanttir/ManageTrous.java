@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -101,14 +102,13 @@ public class ManageTrous extends AppCompatActivity {
             }
         }
 
-        public void setDateTime (TextView view,long timeUtc){
+        public void setDateTime (TextView view, Date timeUtc){
             Calendar calendar = Calendar.getInstance();
             TimeZone tz = TimeZone.getDefault();
             calendar.add(Calendar.MILLISECOND, tz.getOffset(calendar.getTimeInMillis()));
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm", Locale.getDefault());
-            java.util.Date currenTimeZone =new java.util.Date(timeUtc);
 
-            view.setText(formatter.format(currenTimeZone));
+            view.setText(formatter.format(timeUtc));
         }
 
         @Override
