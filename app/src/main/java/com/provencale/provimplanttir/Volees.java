@@ -23,6 +23,7 @@ import org.json.JSONException;
 // File is stored in [Phone]\Mémoire de stockage interne\Android\data\com.provencale.provimplanttir\files\
 public class Volees {
     public String FILENAME = "volees.geojson";
+    private int JSONWRITESPACEEACHLEVEL = 2;
     private SortedSet<Trou> setTrous =  new TreeSet<Trou>() ; // the order is defined in Trou.compareTo
 
     //Creator
@@ -85,7 +86,7 @@ public class Volees {
             JSONObject jsonbjectFull = new JSONObject();
             jsonbjectFull.put("type", "FeatureCollection");
             jsonbjectFull.put("features", jsonArrayFeatures);
-            return jsonbjectFull.toString();
+            return jsonbjectFull.toString(JSONWRITESPACEEACHLEVEL);
         } catch (JSONException e) {
             Log.e("Volees","toString:JSONException");
             //e.printStackTrace();
