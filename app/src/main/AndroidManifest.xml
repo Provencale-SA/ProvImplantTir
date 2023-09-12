@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -20,6 +19,9 @@
         android:theme="@style/Theme.ProvImplantTir"
         tools:targetApi="31">
         <activity
+            android:name=".About"
+            android:exported="false" />
+        <activity
             android:name=".ManageTrous"
             android:exported="false" />
         <activity
@@ -31,6 +33,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -38,7 +41,7 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths"></meta-data>
+                android:resource="@xml/provider_paths" />
         </provider>
     </application>
 

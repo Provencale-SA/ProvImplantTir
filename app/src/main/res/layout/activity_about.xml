@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".About">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/about_textview_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fichier geojson"
+                android:textStyle="bold"
+                android:textSize="25dp"
+                app:layout_constraintStart_toStartOf="parent" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" >
+            </Space>
+
+            <Button
+                android:id="@+id/about_button_retour"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content"
+                android:text="Retour" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/about_path_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Emplacement du fichier :"
+            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/about_path_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filepath"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/about_format_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Exemple de volees.geojson :"
+            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/about_format_explanation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="9dp"
+            android:typeface="monospace"
+            android:text="
+{'features': [{'geometry': {'coordinates': [2.878292, 42.696211, 30],\n
+                            'type': 'Point'},\n
+               'properties': {'name': 'test0101',\n
+                              'nomVolee': 'test',\n
+                              'numeroRangee': 1,\n
+                              'numeroTrou': 1,\n
+                              'timeUtc': 2023-09-12T13:15:47Z},\n
+               'type': 'Feature'},\n
+              {'geometry': {'coordinates': [2.87968, 42.696255, 30],\n
+                            'type': 'Point'},\n
+               'properties': {'name': 'test0102',\n
+                              'nomVolee': 'test',\n
+                              'numeroRangee': 1,\n
+                              'numeroTrou': 2,\n
+                              'timeUtc': 2023-09-12T13:16:10Z},\n
+               'type': 'Feature'}],\n
+ 'type': 'FeatureCollection'}"
+            app:layout_constraintStart_toStartOf="parent"
+            android:inputType="textMultiLine"
+            android:maxLines="40" />
+
+
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

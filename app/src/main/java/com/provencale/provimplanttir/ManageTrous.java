@@ -129,6 +129,7 @@ public class ManageTrous extends AppCompatActivity {
                     share.setAction(Intent.ACTION_SEND);
                     share.setType("application/json");
                     share.putExtra(Intent.EXTRA_STREAM, uri_share);
+                    //share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivity(Intent.createChooser(share, "Partager fichier"));
                 }
                 return true;
@@ -154,6 +155,13 @@ public class ManageTrous extends AppCompatActivity {
                 alert.show();
 
                 return true;
+
+
+            case R.id.menu_about_file:
+                Intent switchActivityIntent = new Intent(this, About.class);
+                startActivity(switchActivityIntent);
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }

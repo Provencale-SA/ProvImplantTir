@@ -15,4 +15,9 @@
         android:icon="@drawable/delete_forever_icon"
         android:title="Supprimer tous les trous"
         />
+    <item
+        android:id="@+id/menu_about_file"
+        android:icon="@drawable/info_icon"
+        android:title="A propos du fichier"
+        />
 </menu>
