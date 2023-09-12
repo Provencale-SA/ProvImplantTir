@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -120,17 +122,25 @@ public class ManageTrous extends AppCompatActivity {
                 Uri uri_share;
                 File file_share = volees.getFile(getApplicationContext());
                 if(file_share.exists()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        uri_share = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file_share);
-                    } else {
-                        uri_share = Uri.fromFile(file_share);
+
+                    uri_share = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file_share);// Min SDK 24
+
+
+                    Intent inter_share = new Intent();
+                    inter_share.setAction(Intent.ACTION_SEND);
+                    inter_share.setType("application/json");
+                    inter_share.putExtra(Intent.EXTRA_STREAM, uri_share);
+                    //inter_share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                    // Following to avoid a (non blocking?) exception : java.lang.SecurityException: Permission Denial
+                    Intent chooser = Intent.createChooser(inter_share, "Partager fichier");
+                    List<ResolveInfo> resInfoList = this.getPackageManager().queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY);
+
+                    for (ResolveInfo resolveInfo : resInfoList) {
+                        String packageName = resolveInfo.activityInfo.packageName;
+                        this.grantUriPermission(packageName, uri_share,  Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     }
-                    Intent share = new Intent();
-                    share.setAction(Intent.ACTION_SEND);
-                    share.setType("application/json");
-                    share.putExtra(Intent.EXTRA_STREAM, uri_share);
-                    //share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(Intent.createChooser(share, "Partager fichier"));
+                    startActivity(chooser);
                 }
                 return true;
             case R.id.menu_delete_all:
