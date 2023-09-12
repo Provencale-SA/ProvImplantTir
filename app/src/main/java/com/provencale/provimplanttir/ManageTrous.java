@@ -5,6 +5,7 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
@@ -19,6 +20,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -41,6 +45,7 @@ public class ManageTrous extends AppCompatActivity {
     private Button buttonBackToMainActivity;
     private Button buttonOpenFile;
     ListView listTrous;
+    TrousAdapter adapter;
 
     Volees volees;
     private final static int REQUEST_CODE_PERM_RW = 1001;
@@ -74,32 +79,84 @@ public class ManageTrous extends AppCompatActivity {
         Log.d("ManageTrous","onCreate:this.volees:"+this.volees.toString());
 
         // Create the adapter to convert the array to views
-        TrousAdapter adapter = new TrousAdapter(this, this.volees);
+        adapter = new TrousAdapter(this, this.volees);
 
         // Attach the adapter to a ListView
         listTrous = (ListView)findViewById(R.id.listTrous);
         listTrous.setAdapter(adapter);
         Log.d("ManageTrous","onCreate:end:this.volees:"+this.volees.toString());
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        if (menu instanceof MenuBuilder) {
+            ((MenuBuilder) menu).setOptionalIconsVisible(true);
+        }
+        return true;
+    }
 
-        buttonOpenFile = findViewById(R.id.manage_button_open_file);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_open:
+                File file = volees.getFile(getApplicationContext());
+                Uri uri = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file);
+                String mime = "application/json";//"text/plain"
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, mime);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                try {
+                    startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(getApplicationContext(),
+                            "Merci d'installer QField ou une application lisant les (geo)json",
+                            Toast.LENGTH_LONG).show();
+                }
 
-        buttonOpenFile.setOnClickListener(v -> {
-            File file = volees.getFile(getApplicationContext());
-            Uri uri = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file);
-            String mime = "application/json";
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, mime);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            try {
-                startActivity(intent);
-            } catch (ActivityNotFoundException e) {
-                Toast.makeText(getApplicationContext(),
-                        "Merci d'installer QField ou une application lisant les (geo)json",
-                        Toast.LENGTH_LONG).show();
-            }
-        });
+                return true;
+            case R.id.menu_share:
+                Uri uri_share;
+                File file_share = volees.getFile(getApplicationContext());
+                if(file_share.exists()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        uri_share = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file_share);
+                    } else {
+                        uri_share = Uri.fromFile(file_share);
+                    }
+                    Intent share = new Intent();
+                    share.setAction(Intent.ACTION_SEND);
+                    share.setType("application/json");
+                    share.putExtra(Intent.EXTRA_STREAM, uri_share);
+                    startActivity(Intent.createChooser(share, "Partager fichier"));
+                }
+                return true;
+            case R.id.menu_delete_all:
 
+                AlertDialog.Builder builder = new AlertDialog.Builder(ManageTrous.this);
+                builder.setMessage("Etes-vous sûr de vouloir supprimer TOUS les trous ?");
+                builder.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                        volees.removeALlTrou();
+                        volees.write(getApplicationContext()); // write to file
+                        adapter.clear();
+                        adapter.notifyDataSetChanged(); // force a view update (needed after this.remove(trou))
+                    }
+                });
+                builder.setNegativeButton("Non", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.show();
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public class TrousAdapter extends ArrayAdapter<Trou> {

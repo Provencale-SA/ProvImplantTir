@@ -16,26 +16,16 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         android:orientation="vertical">
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:gravity="center"
-            android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="parent">
-            <Button
-                android:id="@+id/manage_button_retour_implant"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Retourner à l'implantation"
-                />
-            <Button
-                android:id="@+id/manage_button_open_file"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ouvrir fichier" />
 
-        </LinearLayout>
+        <Button
+            android:id="@+id/manage_button_retour_implant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Retourner à l'implantation"
+
+            android:layout_marginTop="5dp"
+            />
+
 
         <ListView
             android:id="@+id/listTrous"

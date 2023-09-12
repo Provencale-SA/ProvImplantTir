@@ -60,6 +60,10 @@ public class Volees {
         return setTrous.remove(trou);
     }
 
+    public void removeALlTrou(){
+        Log.d("Volees","deleteALlTrou");
+        setTrous.clear();
+    }
 
     public ArrayList<Trou> toArrayList() {
         return new ArrayList(this.setTrous);
@@ -245,4 +249,6 @@ public class Volees {
         // now let s clean the original
         return writeFile(context, "");
     }
+
+
 }
