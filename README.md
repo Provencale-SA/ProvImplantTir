@@ -5,6 +5,7 @@ The json file will be stored at \Internal storage memory\Android\data\com.proven
 There is a mecanism to avoid registering a position before the accuracy is seemed acceptable.
 
 # Example of volees.geojson
+```
 {'features': [{'geometry': {'coordinates': [2.878292, 42.696211, 30],
                             'type': 'Point'},
                'properties': {'name': 'test0101',
@@ -22,6 +23,7 @@ There is a mecanism to avoid registering a position before the accuracy is seeme
                               'timeUtc': 2023-09-12T13:16:10Z},
                'type': 'Feature'}],
  'type': 'FeatureCollection'}
+ ```
  
 "coordinates" are in WGS84 [longitude, latitude, elavation] according to geojson file format.
 "name" is the concatenation of nomVolee and numeroRangee on two digits and numeroTrou on two digits.
