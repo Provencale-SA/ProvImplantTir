@@ -179,7 +179,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_margin="16dp"
             android:text="Enregistrer le trou"
-            android:icon="@drawable/add_location_icon" />
+            android:drawableLeft="@drawable/add_location_icon" />
 
         <Space
             android:layout_width="0dp"
