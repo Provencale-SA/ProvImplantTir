@@ -6,11 +6,15 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +28,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -34,10 +39,14 @@ import java.util.TimeZone;
 public class ManageTrous extends AppCompatActivity {
 
     private Button buttonBackToMainActivity;
+    private Button buttonOpenFile;
     ListView listTrous;
 
     Volees volees;
     private final static int REQUEST_CODE_PERM_RW = 1001;
+    private static final String FILEPROVIDERAUTHORITY =
+            BuildConfig.APPLICATION_ID + ".fileprovider";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("ManageTrous","onCreate:start");
@@ -51,6 +60,8 @@ public class ManageTrous extends AppCompatActivity {
                 finish();// return to Main Activity
             }
         });
+
+
 
         Boolean flag = checkPermissions();
         if (!flag){
@@ -69,6 +80,26 @@ public class ManageTrous extends AppCompatActivity {
         listTrous = (ListView)findViewById(R.id.listTrous);
         listTrous.setAdapter(adapter);
         Log.d("ManageTrous","onCreate:end:this.volees:"+this.volees.toString());
+
+
+        buttonOpenFile = findViewById(R.id.manage_button_open_file);
+
+        buttonOpenFile.setOnClickListener(v -> {
+            File file = volees.getFile(getApplicationContext());
+            Uri uri = FileProvider.getUriForFile(this, FILEPROVIDERAUTHORITY, file);
+            String mime = "application/json";
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, mime);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(getApplicationContext(),
+                        "Merci d'installer QField ou une application lisant les (geo)json",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+
     }
 
     public class TrousAdapter extends ArrayAdapter<Trou> {

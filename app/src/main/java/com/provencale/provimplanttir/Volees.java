@@ -120,6 +120,11 @@ public class Volees {
     ////////////
     /// https://stackoverflow.com/questions/40168601/android-how-to-save-json-data-in-a-file-and-retrieve-it
 
+    public File getFile(Context context) {
+        File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME); // Create a file object but do not create a real file if already exists
+        return myExternalFile;
+    }
+
     public void read(Context context) {
         Log.d("Volees","read");
         String jsonString = readFile(context);
@@ -147,7 +152,7 @@ public class Volees {
     private String readFile(Context context) {
         Log.d("Volees","readFile");
         try {
-            File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+            File myExternalFile = getFile(context);
             FileInputStream fis = new FileInputStream(myExternalFile);
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader bufferedReader = new BufferedReader(isr);
@@ -176,7 +181,7 @@ public class Volees {
     private boolean writeFile(Context context, String jsonString) {
         Log.d("Volees","writeFile");
         try {
-            File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+            File myExternalFile = getFile(context);
             FileOutputStream fos = new FileOutputStream(myExternalFile);
             if (jsonString != null) {
                 fos.write(jsonString.getBytes());
@@ -195,7 +200,7 @@ public class Volees {
 
     public boolean create(Context context) {
         Log.d("Volees","Create");
-        File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+        File myExternalFile = getFile(context);
         try {
             boolean success_created = myExternalFile.createNewFile();
             return success_created;
@@ -207,7 +212,7 @@ public class Volees {
 
     public boolean isFilePresent(Context context) {
         Log.d("Volees","isFilePresent");
-        File myExternalFile = new File(context.getExternalFilesDir(null), this.FILENAME);
+        File myExternalFile = getFile(context);
         return myExternalFile.exists();
     }
     public boolean saveAndCleanFile(Context context,String stringPreviousFile) {
@@ -240,5 +245,4 @@ public class Volees {
         // now let s clean the original
         return writeFile(context, "");
     }
-
 }
