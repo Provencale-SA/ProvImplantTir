@@ -25,7 +25,7 @@ There is a mecanism to avoid registering a position before the accuracy is seeme
  'type': 'FeatureCollection'}
  ```
  ```
-"coordinates" are in WGS84 [longitude, latitude, elavation] according to geojson file format.
+"coordinates" are in WGS84 [longitude, latitude, elevation] according to geojson file format.
 "name" is the concatenation of nomVolee and numeroRangee on two digits and numeroTrou on two digits.
 "nomVolee" is a string of maximum 10 characters.
 "numeroRangee" and "numeroTrou" are integers between 1 and 99.
