@@ -212,7 +212,7 @@ public class ManageTrous extends AppCompatActivity {
             Calendar calendar = Calendar.getInstance();
             TimeZone tz = TimeZone.getDefault();
             calendar.add(Calendar.MILLISECOND, tz.getOffset(calendar.getTimeInMillis()));
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm", Locale.getDefault());
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm:ss", Locale.getDefault());
 
             view.setText(formatter.format(timeUtc));
         }
