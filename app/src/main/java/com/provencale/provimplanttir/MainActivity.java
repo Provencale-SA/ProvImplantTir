@@ -588,6 +588,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("registerLastPositionAsTrou", "Avant : " + volees.toString());
 
                 Date mDateTime = new java.util.Date(mLastLocation.getTime());
+                //Log.v("registerLastPositionAsTrou", "mDateTime:"+mDateTime.toString());
 
                 volees.addtrou(nomVolee, numeroRangee, numeroTrou,
                         mLastLocation.getLatitude(), mLastLocation.getLongitude(), mLastLocation.getAltitude(),

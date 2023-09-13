@@ -16,7 +16,7 @@ public class Trou implements Comparable<Trou> {
     public Double latitude;
     public Double longitude;
     public Double altitude;
-    public Date timeUtc;// GPS timestamp in UTC : Unix epoch time of this location fix
+    public Date timeUtc;// GPS time in UTC. Written as (simply) "time" in json file (with a ending Z for UTC timezone)
     public Integer numeroTrou; // Dans rangee
     public Integer numeroRangee; // Dans volee
     public String nomVolee;
@@ -56,8 +56,9 @@ public class Trou implements Comparable<Trou> {
 
     private static String parseDateToJson(Date timeutc) {
         SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
-        TimeZone tz = TimeZone.getTimeZone( "UTC" );
+        TimeZone tz = TimeZone.getTimeZone( "UTC" ); // might no be useful as the time is in utc all along
         dateFormat.setTimeZone(tz);
+        //Log.v("parseDateToJson", "dateFormat.format( timeutc ):"+dateFormat.format( timeutc ));
         return dateFormat.format( timeutc );
     }
 
@@ -67,11 +68,11 @@ public class Trou implements Comparable<Trou> {
             this.nomVolee = jsonTrouProperties.getString("nomVolee");;
             this.numeroRangee = jsonTrouProperties.getInt("numeroRangee");
             this.numeroTrou = jsonTrouProperties.getInt("numeroTrou");
-            if (jsonTrouProperties.isNull("timeUtc")){ // checks if timeUtc is present and if null
+            if (jsonTrouProperties.isNull("time")){ // checks if timeUtc is present and if null
                 this.timeUtc = new java.util.Date(0L);
             }
             else{
-                this.timeUtc = parseJsontoDate(jsonTrouProperties.getString("timeUtc"));
+                this.timeUtc = parseJsontoDate(jsonTrouProperties.getString("time"));
             }
 
             JSONObject jsonTrouGeo = jsonObject.getJSONObject("geometry");
@@ -99,7 +100,7 @@ public class Trou implements Comparable<Trou> {
             jsonTrouProperties.put("nomVolee",this.nomVolee);
             jsonTrouProperties.put("numeroRangee",this.numeroRangee);
             jsonTrouProperties.put("numeroTrou",this.numeroTrou);
-            jsonTrouProperties.put("timeUtc",parseDateToJson(this.timeUtc));
+            jsonTrouProperties.put("time",parseDateToJson(this.timeUtc));
             jsonTrou.put("properties",jsonTrouProperties);
 
 

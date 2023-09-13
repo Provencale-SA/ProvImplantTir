@@ -78,7 +78,7 @@
                               'nomVolee': 'test',\n
                               'numeroRangee': 1,\n
                               'numeroTrou': 1,\n
-                              'timeUtc': 2023-09-12T13:15:47Z},\n
+                              'time': 2023-09-12T13:15:47Z},\n
                'type': 'Feature'},\n
               {'geometry': {'coordinates': [2.87968, 42.696255, 30],\n
                             'type': 'Point'},\n
@@ -86,7 +86,7 @@
                               'nomVolee': 'test',\n
                               'numeroRangee': 1,\n
                               'numeroTrou': 2,\n
-                              'timeUtc': 2023-09-12T13:16:10Z},\n
+                              'time': 2023-09-12T13:16:10Z},\n
                'type': 'Feature'}],\n
  'type': 'FeatureCollection'}"
             app:layout_constraintStart_toStartOf="parent"

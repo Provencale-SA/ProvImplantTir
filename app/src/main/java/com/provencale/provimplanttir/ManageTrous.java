@@ -209,9 +209,7 @@ public class ManageTrous extends AppCompatActivity {
         }
 
         public void setDateTime (TextView view, Date timeUtc){
-            Calendar calendar = Calendar.getInstance();
             TimeZone tz = TimeZone.getDefault();
-            calendar.add(Calendar.MILLISECOND, tz.getOffset(calendar.getTimeInMillis()));
             SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm:ss", Locale.getDefault());
 
             view.setText(formatter.format(timeUtc));
