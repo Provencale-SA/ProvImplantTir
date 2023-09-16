@@ -590,21 +590,43 @@ public class MainActivity extends AppCompatActivity {
                 Date mDateTime = new java.util.Date(mLastLocation.getTime());
                 //Log.v("registerLastPositionAsTrou", "mDateTime:"+mDateTime.toString());
 
-                volees.addtrou(nomVolee, numeroRangee, numeroTrou,
-                        mLastLocation.getLatitude(), mLastLocation.getLongitude(), mLastLocation.getAltitude(),
-                        mDateTime);
-                Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
-                volees.write(getApplicationContext());
+                if (volees.contains(nomVolee, numeroRangee, numeroTrou)){
+                    // volees aleady contains the same nomVolee, numeroRangee, numeroTrou
 
-                if (mIncrementTrouSwitch.isChecked()) {
-                    mNumeroTrouDansRangeeNumberPicker.add_one();
-                } else {
-                    mNumeroTrouDansRangeeNumberPicker.minus_one();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setMessage("Ce nom de volée avec numéro de rangée et trou existe déjà. Etes-vous sûr de vouloir l'écraser ?");
+                    builder.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            boolean removeSucces = volees.removeTrou(nomVolee, numeroRangee, numeroTrou);
+                            if (!removeSucces){
+                                Log.e("registerLastPositionAsTrou", "OnClick : Suppression ancien trou impossible" );
+                                Toast.makeText(getApplicationContext(), "Problème lors de la suppression ancien trou" , Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                createTrouAndSave(nomVolee, numeroRangee, numeroTrou,
+                                        mLastLocation.getLatitude(), mLastLocation.getLongitude(), mLastLocation.getAltitude(),
+                                        mDateTime);
+                            }
+                        }
+                    });
+                    builder.setNegativeButton("Non", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // now reallow the button
+                            mEnregistrerTrouButton.setEnabled(true);
+                            gps_loop_for_accuracy = 0;
+                            dialog.dismiss();
+                        }
+                    });
+                    AlertDialog alert = builder.create();
+                    alert.show();
+
+                }
+                else{
+                    createTrouAndSave(nomVolee, numeroRangee, numeroTrou,
+                            mLastLocation.getLatitude(), mLastLocation.getLongitude(), mLastLocation.getAltitude(),
+                            mDateTime);
                 }
 
-                // now reallow the button
-                mEnregistrerTrouButton.setEnabled(true);
-                gps_loop_for_accuracy = 0;
 
             } else {
                 Log.v("registerLastPositionAsTrou", "Position non fiable");
@@ -629,7 +651,27 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+        public void createTrouAndSave(String nomVolee, int numeroRangee, int numeroTrou,
+                                      double latitude, double longitude, double altitude, Date timeUtc){
+
+
+            volees.addtrou(nomVolee, numeroRangee, numeroTrou,
+                    latitude, longitude, altitude, timeUtc);
+            Log.v("registerLastPositionAsTrou", "Apres : " + volees.toString());
+            volees.write(getApplicationContext());
+
+            if (mIncrementTrouSwitch.isChecked()) {
+                mNumeroTrouDansRangeeNumberPicker.add_one();
+            } else {
+                mNumeroTrouDansRangeeNumberPicker.minus_one();
+            }
+
+            // now reallow the button
+            mEnregistrerTrouButton.setEnabled(true);
+            gps_loop_for_accuracy = 0;
+        }
     };
+
 
 
 

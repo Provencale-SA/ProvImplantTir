@@ -48,6 +48,12 @@ public class Volees {
         }
     }
 
+    public boolean contains(String nomVolee, int numeroRangee, int numeroTrou){
+        Trou trou = new Trou(nomVolee, numeroRangee, numeroTrou,0., 0.,0.,new Date(0));
+        return setTrous.contains(trou);
+    }
+
+
     public void addtrou(String nomVolee, int numeroRangee, int numeroTrou,
                    double latitude, double longitude, double altitude, Date timeUtc){
         Log.d("Volees","addtrou");
@@ -55,7 +61,11 @@ public class Volees {
         setTrous.add(trou);
 
     }
-
+    public boolean removeTrou(String nomVolee, int numeroRangee, int numeroTrou){
+        Log.d("Volees","removeTrou");
+        Trou trou = new Trou(nomVolee, numeroRangee, numeroTrou,0., 0.,0.,new Date(0));
+        return setTrous.remove(trou);
+    }
     public boolean removeTrou(Trou trou){
         Log.d("Volees","removeTrou");
         return setTrous.remove(trou);

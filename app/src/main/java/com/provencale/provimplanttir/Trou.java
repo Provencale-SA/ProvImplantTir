@@ -138,27 +138,7 @@ public class Trou implements Comparable<Trou> {
                 return -this.numeroRangee.compareTo(t.numeroRangee);
             }
             else{
-                if (this.numeroTrou.compareTo(t.numeroTrou) != 0) {
-                    return -this.numeroTrou.compareTo(t.numeroTrou);
-                }
-                else{
-                    if (this.timeUtc.compareTo(t.timeUtc) != 0) {
-                        return -this.timeUtc.compareTo(t.timeUtc);
-                    }
-                    else{
-                        if (this.latitude.compareTo(t.latitude) != 0) {
-                            return this.latitude.compareTo(t.latitude);
-                        }
-                        else{
-                            if (this.longitude.compareTo(t.longitude) != 0) {
-                                return this.longitude.compareTo(t.longitude);
-                            }
-                            else{
-                                return this.altitude.compareTo(t.altitude);
-                            }
-                        }
-                    }
-                }
+                return this.numeroTrou.compareTo(t.numeroTrou);
             }
         }
     }
