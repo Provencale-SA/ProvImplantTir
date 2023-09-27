@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
     public int gps_loop_for_accuracy;
     private static int MAX_GPS_LOOP = 10;
     public boolean bypass_gps_accuracy; // used to check or bypass a security on gps accuracy
-    public final static float GPS_PRECISION_HORIZONTAL = 8.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_HORIZONTAL = 10.0F;// meters ; cannot save position unless it is within range
+    public final static float GPS_PRECISION_HORIZ_BYPASS_VERTI = 6.0F;// meters ; below this horizontal precision we do not check vertical accuracy (some android have terrible vertical accuracy)
     public final static float GPS_PRECISION_VERTICAL = 10.0F;// meters ; if vertical accuracy available (some phones does not implement it) cannot save position unless it is within range.
 
     protected boolean gps_enabled;
@@ -147,7 +148,8 @@ public class MainActivity extends AppCompatActivity {
                 && (mLocationListener.mLastLocation.hasAccuracy() && (mLocationListener.mLastLocation.getAccuracy() < GPS_PRECISION_HORIZONTAL)
                 && ((Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 | !(mLocationListener.mLastLocation.hasVerticalAccuracy()) // Only checks GPS_PRECISION_VERTICAL if this precision is available: Some phones only return False to hasVerticalAccuracy
-                | (mLocationListener.mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL))))){
+                | (mLocationListener.mLastLocation.getVerticalAccuracyMeters() < GPS_PRECISION_VERTICAL)
+                | (mLocationListener.mLastLocation.hasAccuracy() && (mLocationListener.mLastLocation.getAccuracy() < GPS_PRECISION_HORIZ_BYPASS_VERTI) ))))){
 
             mEnregistrerTrouButton.setEnabled(true);
             return true;
@@ -564,7 +566,8 @@ public class MainActivity extends AppCompatActivity {
                             } else {
                                 if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                                     &&(mLastLocation.hasVerticalAccuracy()  // Some phone does not have vertical accuracy... So only check that if given
-                                        && (GPS_PRECISION_VERTICAL < mLastLocation.getVerticalAccuracyMeters()))) {
+                                        && (GPS_PRECISION_VERTICAL < mLastLocation.getVerticalAccuracyMeters())
+                                        && GPS_PRECISION_HORIZ_BYPASS_VERTI < mLastLocation.getAccuracy() )) {
                                         is_accurate_enough = false;
                                         is_error_skippeable = true;
                                         Toast.makeText(getApplicationContext(), "Précision verticale (" + String.format("%.1f", mLastLocation.getVerticalAccuracyMeters()) + "m) insuffisante. Nouvel essai en cours", Toast.LENGTH_LONG).show();
